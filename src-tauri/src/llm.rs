@@ -1,10 +1,6 @@
 use ollama_rs::{
+    generation::chat::{request::ChatMessageRequest, ChatMessage, MessageRole},
     Ollama,
-    generation::chat::{
-        request::ChatMessageRequest,
-        ChatMessage,
-        MessageRole,
-    }
 };
 
 pub struct LocalLLM {
@@ -19,16 +15,13 @@ impl LocalLLM {
     }
 
     pub async fn generate_response(&self, messages: Vec<ChatMessage>) -> Result<String, String> {
-        let request = ChatMessageRequest::new(
-            self.model.clone(), 
-            messages
-        );
+        let request = ChatMessageRequest::new(self.model.clone(), messages);
 
         match self.client.send_chat_messages(request).await {
-           // Ok(response) => Ok(response.message.content),
-	    Ok(response) => Ok(response.message.unwrap().content),
+            // Ok(response) => Ok(response.message.content),
+            Ok(response) => Ok(response.message.unwrap().content),
 
-            Err(e) => Err(format!("LLM generation error: {}", e))
+            Err(e) => Err(format!("LLM generation error: {}", e)),
         }
     }
 }

@@ -9,6 +9,19 @@ import {
   ChevronDown 
 } from 'lucide-react';
 import Markdown from 'react-markdown'
+import { register } from '@tauri-apps/plugin-global-shortcut';
+import { moveWindow, Position } from '@tauri-apps/plugin-positioner';
+import remarkGfm from 'remark-gfm'
+import "./App.css"
+
+async function setup() {
+
+moveWindow(Position.TopRight);
+await register('Option+Space', () => {
+  console.log('Shortcut triggered');
+});
+}
+setup()
 
 const ChatInterface = () => {
   const [messages, setMessages] = useState([]);
@@ -71,14 +84,16 @@ const ChatInterface = () => {
             )}
             <div 
               className={`
-                px-4 py-2 rounded-xl max-w-[70%]
+                px-4 py-2 rounded-xl max-w-[90%]
                 ${msg.role === 'user' 
                   ? 'bg-blue-500 text-white' 
                   : 'bg-white text-gray-800 border'}
               `}
             >
 
-              <Markdown>{msg.content}</Markdown>
+             <article class="prose lg:prose-xl">
+              <Markdown remarkPlugins={[remarkGfm]}>{msg.content}</Markdown>
+	     </article>
             </div>
             {msg.role === 'user' && (
               <User className="w-8 h-8 text-gray-500" />

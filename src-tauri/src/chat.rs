@@ -21,17 +21,20 @@ impl ChatState {
         self.conversation_history.push(ChatMessage {
             role: MessageRole::User,
             content: user_message.clone(),
-	    images: None
+            images: None,
         });
 
         // Generate response
-        let response = self.llm.generate_response(self.conversation_history.clone()).await?;
+        let response = self
+            .llm
+            .generate_response(self.conversation_history.clone())
+            .await?;
 
         // Add AI response to history
         self.conversation_history.push(ChatMessage {
             role: MessageRole::Assistant,
             content: response.clone(),
-            images: None
+            images: None,
         });
 
         Ok(response)
