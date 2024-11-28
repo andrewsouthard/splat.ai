@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "shoutai",
+  "productName": "splat.ai",
   "version": "0.1.0",
-  "identifier": "com.shoutai.app",
+  "identifier": "com.splat.app",
   "build": {
     "beforeDevCommand": "yarn dev",
     "devUrl": "http://localhost:1420",
@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "shoutai",
+        "title": "splat.ai",
         "width": 400,
         "height": 400
       }

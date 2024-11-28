@@ -3292,22 +3292,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0fda2ff0d084019ba4d7c6f371c95d8fd75ce3524c3cb8fb653a3023f6323e64"
 
 [[package]]
-name = "shoutai"
-version = "0.1.0"
-dependencies = [
- "env_logger",
- "log",
- "ollama-rs",
- "serde",
- "serde_json",
- "tauri",
- "tauri-build",
- "tauri-plugin-global-shortcut",
- "tauri-plugin-shell",
- "tokio",
-]
-
-[[package]]
 name = "signal-hook-registry"
 version = "1.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3399,6 +3383,22 @@ dependencies = [
  "gobject-sys",
  "libc",
  "system-deps",
+]
+
+[[package]]
+name = "splat"
+version = "0.1.0"
+dependencies = [
+ "env_logger",
+ "log",
+ "ollama-rs",
+ "serde",
+ "serde_json",
+ "tauri",
+ "tauri-build",
+ "tauri-plugin-global-shortcut",
+ "tauri-plugin-shell",
+ "tokio",
 ]
 
 [[package]]

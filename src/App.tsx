@@ -51,20 +51,20 @@ export default function ChatInterface() {
       complete: true,
     };
 
-    setMessages((prev) => [...prev, newMessage]);
+    const newMessages = [...messages, newMessage];
+    setMessages(newMessages);
     setInputMessage("");
     setIsLoading(true);
 
     try {
-      const response = await fetch("http://localhost:11434/api/generate", {
+      const response = await fetch("http://localhost:11434/api/chat", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
           model: "llama3.2",
-          prompt: inputMessage,
-          stream: true,
+          messages: newMessages,
         }),
       });
 
@@ -104,7 +104,9 @@ export default function ChatInterface() {
               if (messageIndex !== -1) {
                 newMessages[messageIndex] = {
                   ...newMessages[messageIndex],
-                  content: newMessages[messageIndex].content + json.response,
+                  content:
+                    newMessages[messageIndex].content +
+                    (json?.message?.content ?? ""),
                   complete: json.done,
                 };
               }
