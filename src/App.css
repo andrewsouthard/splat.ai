@@ -2,13 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-
-pre.shiki {
-  padding: 1rem;
-  overflow-x: scroll;
-  font-size: 0.875rem;
-}
-
 .typewriter {
   display: inline-block;
   overflow: hidden;
