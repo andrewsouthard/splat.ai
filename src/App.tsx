@@ -175,6 +175,7 @@ export default function ChatInterface() {
         const convos = await store.get<{ value: Conversation[] }>(
           "conversations"
         );
+        console.log(convos);
         if (convos) {
           setConversations(convos.value);
         } else {
@@ -182,10 +183,6 @@ export default function ChatInterface() {
         }
         const ac = await store.get<{ value: string }>("activeConversationId");
         if (ac) setActiveConversationId(ac.value);
-        return () => {
-          storeRef.current?.set("conversations", conversations);
-          storeRef.current?.set("activeConversationId", activeConversationId);
-        };
       }
     }
     setup();
@@ -211,6 +208,7 @@ export default function ChatInterface() {
     // Load messages from new conversation
     const newMessages = newActiveConvo?.messages || [];
     setMessages(newMessages);
+    setIsLoading(false);
   };
 
   return (
@@ -244,15 +242,6 @@ export default function ChatInterface() {
             <PlusCircle className="h-5 w-5" />
             <span>New Conversation</span>
           </button>
-          <ul>
-            {conversations.map((convo, index) => (
-              <li key={index}>
-                <button onClick={() => switchConversation(convo.id)}>
-                  <div>{convo.summary}</div>
-                </button>
-              </li>
-            ))}
-          </ul>
         </div>
       ) : (
         <button
@@ -273,7 +262,7 @@ export default function ChatInterface() {
         )}
       </ScrollContainer>
       {/* Input Area */}
-      <div className={`p-4 bg-white border-t block relative`}>
+      <div className={`p-4 bg-white border-t block relative max-h-[25%]`}>
         <textarea
           value={inputMessage}
           onChange={(e) => setInputMessage(e.target.value)}
@@ -281,12 +270,13 @@ export default function ChatInterface() {
             if (e.key === "Enter" && !e.shiftKey) {
               e.preventDefault();
               sendMessage();
+              const target = e.target as HTMLTextAreaElement;
+              target.style.height = `44px`;
             }
           }}
           placeholder="Type your message..."
-          className="flex-grow p-2 border rounded-lg w-full resize-none overflow-hidden"
+          className="flex-grow p-2 border rounded-lg w-full min-h-11 resize-none overflow-y-scroll max-h-full outline-none"
           rows={1}
-          style={{ minHeight: "44px" }}
           onInput={(e) => {
             const target = e.target as HTMLTextAreaElement;
             target.style.height = "auto";

@@ -13,8 +13,8 @@
     "windows": [
       {
         "title": "splat.ai",
-        "width": 400,
-        "height": 400
+        "width": 600,
+        "height": 800
       }
     ],
     "security": {
