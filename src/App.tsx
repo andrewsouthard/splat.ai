@@ -1,12 +1,16 @@
 import { useState, useRef, useEffect } from "react";
-import { load, Store } from "@tauri-apps/plugin-store";
-import { RefreshCcw, Menu, PlusCircle, Square } from "lucide-react";
+import { RefreshCcw, Square } from "lucide-react";
 import { register } from "@tauri-apps/plugin-global-shortcut";
 import { moveWindow, Position } from "@tauri-apps/plugin-positioner";
 import "./App.css";
 import { ScrollContainer } from "./components/ScrollContainer";
 import ChatMessage from "./components/ChatMessage";
-import { Conversation, Message } from "./types";
+import Toolbar from "./components/Toolbar";
+import { useSettingsStore } from "./store/settingsStore";
+import { useConversationStore } from "./store/conversationStore";
+import { Message } from "./types";
+import { useShallow } from "zustand/react/shallow";
+import ConversationsMenu from "./components/ConversationsMenu";
 
 async function setup() {
   moveWindow(Position.TopRight);
@@ -16,31 +20,59 @@ async function setup() {
 }
 setup();
 
-const getBlankConversation = () => ({
-  id: crypto.randomUUID(),
-  messages: [],
-  summary: "New Conversation",
-});
-
-export default function ChatInterface() {
-  const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [messages, setMessages] = useState<Message[]>([]);
+export default function App() {
+  const [
+    conversations,
+    activeConversationId,
+    setActiveConversationId,
+    setConversationMessages,
+    updateConversationSummary,
+  ] = useConversationStore(
+    useShallow((state) => [
+      state.conversations,
+      state.activeConversationId,
+      state.setActiveConversationId,
+      state.setConversationMessages,
+      state.updateConversationSummary,
+    ])
+  );
   const [isLoading, setIsLoading] = useState(false);
   const keepStreamingRef = useRef(true);
-  const storeRef = useRef<Store>({} as Store);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [activeConversationId, setActiveConversationId] = useState<string>();
   const [inputMessage, setInputMessage] = useState("");
+  const [messages, setMessages] = useState<Message[]>([]);
+  const { selectedModel } = useSettingsStore();
+
+  // setMessages to the conversationMessages when the conversation changes
+  useEffect(() => {
+    if (!conversations.length) {
+      return;
+    }
+    if (!activeConversationId) {
+      switchConversation(conversations[0].id);
+    } else {
+      switchConversation(activeConversationId);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (activeConversationId) switchConversation(activeConversationId);
+  }, [activeConversationId]);
+
+  // Need to write messages to conversationMessages when they change and setMessages
+  useEffect(() => {
+    if (messages.length > 0) {
+      setConversationMessages(messages);
+    }
+  }, [messages]);
+
+  const toggleSidebar = () => {
+    setIsMenuOpen((prev) => !prev);
+  };
 
   const stopResponse = () => {
     console.log("stopping");
     keepStreamingRef.current = false;
-  };
-
-  const addConversation = () => {
-    const newConvo = getBlankConversation();
-    setConversations([...conversations, newConvo]);
-    switchConversation(newConvo.id);
   };
 
   const sendMessage = async () => {
@@ -48,17 +80,10 @@ export default function ChatInterface() {
     const activeConvo = conversations.find(
       (c) => c.id === activeConversationId
     );
-    if (activeConvo?.messages.length === 0) {
+    if (activeConvo && messages.length === 0) {
       // set the summary of the active conversation to the input message via setConversations
       // this will trigger a re-render of the conversation list
-      setConversations((prev) =>
-        prev.map((c) => {
-          if (c.id === activeConversationId) {
-            c.summary = inputMessage.trim();
-          }
-          return c;
-        })
-      );
+      updateConversationSummary(activeConvo.id, inputMessage.trim());
     }
 
     setIsLoading(true);
@@ -85,7 +110,7 @@ export default function ChatInterface() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          model: "llama3.2",
+          model: selectedModel,
           messages: newMessages,
         }),
       });
@@ -167,90 +192,20 @@ export default function ChatInterface() {
     }
   };
 
-  useEffect(() => {
-    async function setup() {
-      const store = await load("store.json", { autoSave: true });
-      if (store) {
-        storeRef.current = store;
-        const convos = await store.get<{ value: Conversation[] }>(
-          "conversations"
-        );
-        console.log(convos);
-        if (convos) {
-          setConversations(convos.value);
-        } else {
-          setConversations([getBlankConversation()]);
-        }
-        const ac = await store.get<{ value: string }>("activeConversationId");
-        if (ac) setActiveConversationId(ac.value);
-      }
-    }
-    setup();
-  }, []);
-
   const switchConversation = (id: string) => {
-    // Save current messages to current conversation
-    const activeConvo = conversations.find(
-      (c) => c.id === activeConversationId
-    );
-    const newActiveConvo = conversations.find((c) => c.id === id);
-    if (activeConvo) {
-      activeConvo.messages = messages;
-    }
-    // Update conversations array
-    setConversations((prev) =>
-      prev ? prev.map((c) => (c.id === activeConvo?.id ? activeConvo : c)) : []
-    );
-
-    // Switch to new conversation
+    const newConvo = conversations.find((c) => c.id === id);
     setActiveConversationId(id);
-
-    // Load messages from new conversation
-    const newMessages = newActiveConvo?.messages || [];
-    setMessages(newMessages);
+    setMessages(newConvo?.messages || []);
     setIsLoading(false);
   };
 
   return (
     <div className="flex flex-col h-screen bg-gray-100">
-      {isMenuOpen ? (
-        <div
-          onMouseLeave={() => setIsMenuOpen(false)}
-          className={`p-4 fixed top-0 left-0 w-64 h-screen bg-white shadow-lg transition-transform duration-100 ease-in-out ${
-            isMenuOpen ? "translate-x-0" : "-translate-x-full"
-          }`}
-        >
-          {conversations
-            .map((convo, index) => (
-              <button
-                key={index}
-                onClick={() => switchConversation(convo.id)}
-                className={`w-full p-3 text-left border-b flex items-center gap-2 rounded-sm ${
-                  convo.id === activeConversationId
-                    ? "bg-blue-500 text-white"
-                    : ""
-                }`}
-              >
-                <div className="flex-grow">{convo.summary}</div>
-              </button>
-            ))
-            .reverse()}
-          <button
-            onClick={addConversation}
-            className="w-full p-3 text-left hover:bg-gray-100 border-b flex items-center gap-2"
-          >
-            <PlusCircle className="h-5 w-5" />
-            <span>New Conversation</span>
-          </button>
-        </div>
-      ) : (
-        <button
-          className="fixed left-4 top-4 p-2 rounded-full bg-blue-500 text-white shadow-lg hover:bg-blue-600 z-50 opacity-0 transition-opacity hover:opacity-100"
-          onClick={() => setIsMenuOpen(true)}
-        >
-          <Menu className="h-6 w-6" />
-        </button>
-      )}
+      <Toolbar toggleSidebar={toggleSidebar} />
+      <ConversationsMenu
+        isMenuOpen={isMenuOpen}
+        toggleSidebar={toggleSidebar}
+      />
       <ScrollContainer messages={messages} className="p-4 space-y-4">
         {messages.map((msg, index) => (
           <ChatMessage key={index} role={msg.role} content={msg.content} />

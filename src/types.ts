@@ -12,3 +12,7 @@ export interface Conversation {
     summary: string;
     messages: Message[];
 }
+
+export interface Model {
+    name: string;
+}
