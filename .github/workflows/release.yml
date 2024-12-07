@@ -26,7 +26,20 @@ jobs:
           rustup target add x86_64-apple-darwin # Add target for Intel macOS
           rustup target add aarch64-apple-darwin # Add target for Apple Silicon macOS
 
-      - name: Install dependencies
+      - name: Install Tauri dependencies
+        run: |
+          sudo apt update
+          sudo apt install libwebkit2gtk-4.1-dev \
+            build-essential \
+            curl \
+            wget \
+            file \
+            libxdo-dev \
+            libssl-dev \
+            libayatana-appindicator3-dev \
+            librsvg2-dev
+
+      - name: Install Javascript dependencies
         run: yarn install
 
       - name: Build Tauri app
