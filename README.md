@@ -30,7 +30,11 @@ For example, to pull the `llama3.2` model, run the following command:
 ollama pull llama3.2
 ```
 
-3. Run the app and start chatting!
+3. Download the app
+
+Download the latest release of the app from the [releases page](https://github.com/andrewsouthard/splat.ai/releases/latest).
+
+4. Install the app and start chatting!
 
 ## Development
 
