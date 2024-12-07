@@ -49,6 +49,12 @@ jobs:
         id: get_version
         run: echo "VERSION=$(jq -r .version package.json)" >> $GITHUB_ENV
 
+      - name: Print out files
+        run: |
+          pwd
+          find . -name "*.dmg" -type f || true
+          ls -lR /home/runner/work/splat.ai/splat.ai/src-tauri/target/release/splat || true
+
       - name: Create Release
         id: create_release
         uses: softprops/action-gh-release@v1
