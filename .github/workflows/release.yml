@@ -1,0 +1,55 @@
+name: Tauri Build and Release
+
+on: workflow_dispatch
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: "18"
+
+      - name: Install Yarn
+        run: npm install --global yarn # Ensure Yarn is installed
+
+      - name: Set up Rust
+        run: |
+          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+          source $HOME/.cargo/env
+          rustup update
+          rustup target add x86_64-apple-darwin # Add target for Intel macOS
+          rustup target add aarch64-apple-darwin # Add target for Apple Silicon macOS
+
+      - name: Install dependencies
+        run: yarn install
+
+      - name: Build Tauri app
+        run: yarn runtauri build
+
+      - name: Get version from package.json
+        id: get_version
+        run: echo "VERSION=$(jq -r .version package.json)" >> $GITHUB_ENV
+
+      - name: Create Release
+        id: create_release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ env.VERSION }} # Use the version from package.json
+          files: |
+            target/release/bundle/dmg/*.dmg  # Adjust the path if necessary
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload Release Asset
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ env.VERSION }} # Use the version from package.json
+          files: src-tauri/target/release/bundle/macos/*.dmg # Adjust the path if necessary
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
