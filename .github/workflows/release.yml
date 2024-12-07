@@ -16,7 +16,7 @@ jobs:
           node-version: "18"
 
       - name: Install Yarn
-        run: npm install --global yarn # Ensure Yarn is installed
+        run: npm install --global corepack && corepack enable && corepack prepare yarn@stable --activate
 
       - name: Set up Rust
         run: |
@@ -26,15 +26,34 @@ jobs:
           rustup target add x86_64-apple-darwin # Add target for Intel macOS
           rustup target add aarch64-apple-darwin # Add target for Apple Silicon macOS
 
-      - name: Install dependencies
+      - name: Install Tauri dependencies
+        run: |
+          sudo apt update
+          sudo apt install libwebkit2gtk-4.1-dev \
+            build-essential \
+            curl \
+            wget \
+            file \
+            libxdo-dev \
+            libssl-dev \
+            libayatana-appindicator3-dev \
+            librsvg2-dev
+
+      - name: Install Javascript dependencies
         run: yarn install
 
       - name: Build Tauri app
-        run: yarn runtauri build
+        run: yarn run tauri build
 
       - name: Get version from package.json
         id: get_version
         run: echo "VERSION=$(jq -r .version package.json)" >> $GITHUB_ENV
+
+      - name: Print out files
+        run: |
+          pwd
+          find . -name "*.dmg" -type f || true
+          ls -lR /home/runner/work/splat.ai/splat.ai/src-tauri/target/release/splat || true
 
       - name: Create Release
         id: create_release
@@ -42,14 +61,4 @@ jobs:
         with:
           tag_name: ${{ env.VERSION }} # Use the version from package.json
           files: |
-            target/release/bundle/dmg/*.dmg  # Adjust the path if necessary
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Upload Release Asset
-        uses: softprops/action-gh-release@v1
-        with:
-          tag_name: ${{ env.VERSION }} # Use the version from package.json
-          files: src-tauri/target/release/bundle/macos/*.dmg # Adjust the path if necessary
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            ./src-tauri/target/release/bundle/dmg/*.dmg

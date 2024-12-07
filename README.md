@@ -6,7 +6,7 @@ splat.ai is a MacOS app that allows you to chat with your favorite AI models usi
 - 🔒 Secure: Everything runs 100% locally on your machine, no data leaves your computer.
 - 🔃 Customizable: Configure your own API URL and models.
 
-![Alt Text](screenshot.png)
+![Alt Text](screenshot.png){: style="max-height: 300px;" }
 
 ---
 
