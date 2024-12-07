@@ -55,14 +55,4 @@ jobs:
         with:
           tag_name: ${{ env.VERSION }} # Use the version from package.json
           files: |
-            target/release/bundle/dmg/*.dmg  # Adjust the path if necessary
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Upload Release Asset
-        uses: softprops/action-gh-release@v1
-        with:
-          tag_name: ${{ env.VERSION }} # Use the version from package.json
-          files: src-tauri/target/release/bundle/macos/*.dmg # Adjust the path if necessary
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            ./src-tauri/target/release/bundle/dmg/*.dmg
