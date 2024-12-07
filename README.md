@@ -6,9 +6,7 @@ splat.ai is a MacOS app that allows you to chat with your favorite AI models usi
 - 🔒 Secure: Everything runs 100% locally on your machine, no data leaves your computer.
 - 🔃 Customizable: Configure your own API URL and models.
 
-![Alt Text](screenshot.png){: style="max-height: 300px;" }
-
----
+<img src="screenshot.png" alt="splat.ai screenshot" style="width: 450px;" />
 
 ## Getting Started
 
@@ -30,7 +28,19 @@ For example, to pull the `llama3.2` model, run the following command:
 ollama pull llama3.2
 ```
 
-3. Run the app and start chatting!
+3. Download the app and enable running it
+
+Download the latest release of the app from the [releases page](https://github.com/andrewsouthard/splat.ai/releases/latest).
+
+Enable running the app (due to signing requirements) by running the following command in the terminal:
+
+```bash
+xattr -dr com.apple.quarantine <path_to_app>
+```
+
+Replace `<path_to_app>` with the path to the downloaded app.
+
+4. Install the app and start chatting!
 
 ## Development
 
