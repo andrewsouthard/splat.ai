@@ -16,7 +16,7 @@ jobs:
           node-version: "18"
 
       - name: Install Yarn
-        run: npm install --global yarn # Ensure Yarn is installed
+        run: npm install --global corepack && corepack enable && corepack prepare yarn@stable --activate
 
       - name: Set up Rust
         run: |
@@ -30,7 +30,7 @@ jobs:
         run: yarn install
 
       - name: Build Tauri app
-        run: yarn runtauri build
+        run: yarn run tauri build
 
       - name: Get version from package.json
         id: get_version
