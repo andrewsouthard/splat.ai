@@ -40,6 +40,7 @@ xattr -dr com.apple.quarantine <path_to_app>
 
 Replace `<path_to_app>` with the path to the downloaded app.
 
+
 4. Install the app and start chatting!
 
 ## Development
