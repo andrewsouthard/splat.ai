@@ -11,6 +11,7 @@ interface Conversation {
 interface ConversationStore {
     conversations: Conversation[];
     activeConversationId: string | null;
+    addConversation: () => void;
     setActiveConversationId: (id: string) => void;
     conversationMessages: () => Message[];
     setConversationMessages: (messages: Message[]) => void;
@@ -18,11 +19,28 @@ interface ConversationStore {
     updateConversationSummary: (id: string, summary: string) => void;
 }
 
+
+const getBlankConversation = () => ({
+    id: crypto.randomUUID(),
+    messages: [],
+    summary: "New Conversation",
+  });
+
+
 export const useConversationStore = create<ConversationStore>()(
     persist(
         (set, get) => ({
             conversations: [],
             activeConversationId: null,
+            addConversation: () => {
+                // Don't do anything if this conversation is empty
+               if(get().conversationMessages().length === 0) return;
+                const newConvo = getBlankConversation();
+                set((state) => ({
+                    conversations: [...state.conversations, newConvo],
+                    activeConversationId: newConvo.id,
+                }));
+            },
             setActiveConversationId: (id: string) => set({ activeConversationId: id }),
             conversationMessages: () =>
                 get().conversations.find((c) => c.id === get().activeConversationId)
