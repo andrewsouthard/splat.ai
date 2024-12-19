@@ -11,14 +11,8 @@ import { useConversationStore } from "./store/conversationStore";
 import { Message } from "./types";
 import { useShallow } from "zustand/react/shallow";
 import ConversationsMenu from "./components/ConversationsMenu";
-
-async function setup() {
-  moveWindow(Position.TopRight);
-  await register("Option+Space", () => {
-    console.log("Shortcut triggered");
-  });
-}
-setup();
+import { Window } from "@tauri-apps/api/window";
+import { useCommandN } from "./hooks/useCommandN";
 
 export default function App() {
   const [
@@ -36,6 +30,7 @@ export default function App() {
       state.updateConversationSummary,
     ])
   );
+  useCommandN();
   const [isLoading, setIsLoading] = useState(false);
   const keepStreamingRef = useRef(true);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -43,8 +38,16 @@ export default function App() {
   const [messages, setMessages] = useState<Message[]>([]);
   const { selectedModel } = useSettingsStore();
 
-  // setMessages to the conversationMessages when the conversation changes
   useEffect(() => {
+    async function setup() {
+      moveWindow(Position.TopRight);
+      await register("Option+Space", async () => {
+        const currentWindow = await Window.getCurrent();
+        currentWindow.setFocus();
+        document.getElementById("text-input")?.focus();
+      });
+    }
+    setup();
     if (!conversations.length) {
       return;
     }
@@ -83,7 +86,8 @@ export default function App() {
     if (activeConvo && messages.length === 0) {
       // set the summary of the active conversation to the input message via setConversations
       // this will trigger a re-render of the conversation list
-      updateConversationSummary(activeConvo.id, inputMessage.trim());
+      const summary = inputMessage.trim().substring(0, 100);
+      updateConversationSummary(activeConvo.id, summary);
     }
 
     setIsLoading(true);
@@ -219,6 +223,8 @@ export default function App() {
       {/* Input Area */}
       <div className={`p-4 bg-white border-t block relative max-h-[25%]`}>
         <textarea
+          autoFocus
+          id="text-input"
           value={inputMessage}
           onChange={(e) => setInputMessage(e.target.value)}
           onKeyDown={(e) => {

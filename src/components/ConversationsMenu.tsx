@@ -8,12 +8,6 @@ interface ConversationsMenuProps {
   toggleSidebar: () => void;
 }
 
-export const getBlankConversation = () => ({
-  id: crypto.randomUUID(),
-  messages: [],
-  summary: "New Conversation",
-});
-
 export default function ConversationsMenu({
   isMenuOpen,
   toggleSidebar,
@@ -21,14 +15,14 @@ export default function ConversationsMenu({
   const {
     conversations,
     setActiveConversationId,
-    setConversations,
     activeConversationId,
+    addConversation,
   } = useConversationStore(
     useShallow((state) => ({
       conversations: state.conversations,
       setActiveConversationId: state.setActiveConversationId,
-      setConversations: state.setConversations,
       activeConversationId: state.activeConversationId,
+      addConversation: state.addConversation,
     }))
   );
 
@@ -38,16 +32,10 @@ export default function ConversationsMenu({
     }
   }, [conversations]);
 
-  const addConversation = () => {
-    const newConvo = getBlankConversation();
-    setConversations([...conversations, newConvo]);
-    setActiveConversationId(newConvo.id);
-  };
-
   return (
     <div
       onMouseLeave={toggleSidebar}
-      className={`p-4 fixed top-0 left-0 w-64 h-screen bg-white shadow-lg transition-transform duration-100 ease-in-out ${
+      className={`p-4 fixed top-0 left-0 w-64 h-screen bg-white shadow-lg transition-transform duration-100 ease-in-out overflow-y-scroll ${
         isMenuOpen ? "translate-x-0" : "-translate-x-full"
       }`}
     >
@@ -65,8 +53,8 @@ export default function ConversationsMenu({
         ))
         .reverse()}
       <button
-        onClick={() => addConversation()}
-        className="w-full p-3 text-left hover:bg-gray-100 border-b flex items-center gap-2"
+        onClick={addConversation}
+        className="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100"
       >
         <PlusCircle className="h-5 w-5" />
         <span>New Conversation</span>
