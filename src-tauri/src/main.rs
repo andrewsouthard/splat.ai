@@ -1,29 +1,13 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use std::sync::Arc;
 use tauri::{
     menu::{Menu, MenuItem, Submenu},
     AppHandle, Manager,
 };
-use tokio::sync::Mutex;
-
-mod chat;
-mod llm;
-
-#[tauri::command]
-async fn send_message(
-    message: String,
-    state: tauri::State<'_, Arc<Mutex<chat::ChatState>>>,
-) -> Result<String, String> {
-    let mut chat_state = state.lock().await;
-    chat_state.send_message(message).await
-}
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     env_logger::init();
-
-    let context = Arc::new(Mutex::new(chat::ChatState::new()));
 
     tauri::Builder::default()
         .plugin(tauri_plugin_clipboard_manager::init())
@@ -34,8 +18,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             //app.set_menu(menu)?;
             Ok(())
         })
-        .manage(context)
-        .invoke_handler(tauri::generate_handler![send_message])
         .run(tauri::generate_context!())?;
 
     Ok(())

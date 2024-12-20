@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { RefreshCcw, Square } from "lucide-react";
 import { register } from "@tauri-apps/plugin-global-shortcut";
-import { moveWindow, Position } from "@tauri-apps/plugin-positioner";
 import "./App.css";
 import { ScrollContainer } from "./components/ScrollContainer";
 import ChatMessage from "./components/ChatMessage";
@@ -11,14 +10,9 @@ import { useConversationStore } from "./store/conversationStore";
 import { Message } from "./types";
 import { useShallow } from "zustand/react/shallow";
 import ConversationsMenu from "./components/ConversationsMenu";
-
-async function setup() {
-  moveWindow(Position.TopRight);
-  await register("Option+Space", () => {
-    console.log("Shortcut triggered");
-  });
-}
-setup();
+import { Window } from "@tauri-apps/api/window";
+import { useCommandN } from "./hooks/useCommandN";
+import { debounce } from "lodash-es";
 
 export default function App() {
   const [
@@ -36,15 +30,25 @@ export default function App() {
       state.updateConversationSummary,
     ])
   );
+  const debouncedSetMessages = debounce(setConversationMessages);
   const [isLoading, setIsLoading] = useState(false);
   const keepStreamingRef = useRef(true);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [inputMessage, setInputMessage] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
   const { selectedModel } = useSettingsStore();
+  useCommandN();
 
-  // setMessages to the conversationMessages when the conversation changes
   useEffect(() => {
+    async function setup() {
+      await register("Option+Space", async () => {
+        const currentWindow = await Window.getCurrent();
+        currentWindow.setFocus();
+        inputRef.current?.focus();
+      });
+    }
+    setup();
     if (!conversations.length) {
       return;
     }
@@ -59,11 +63,8 @@ export default function App() {
     if (activeConversationId) switchConversation(activeConversationId);
   }, [activeConversationId]);
 
-  // Need to write messages to conversationMessages when they change and setMessages
   useEffect(() => {
-    if (messages.length > 0) {
-      setConversationMessages(messages);
-    }
+    debouncedSetMessages(messages);
   }, [messages]);
 
   const toggleSidebar = () => {
@@ -83,7 +84,8 @@ export default function App() {
     if (activeConvo && messages.length === 0) {
       // set the summary of the active conversation to the input message via setConversations
       // this will trigger a re-render of the conversation list
-      updateConversationSummary(activeConvo.id, inputMessage.trim());
+      const summary = inputMessage.trim().substring(0, 100);
+      updateConversationSummary(activeConvo.id, summary);
     }
 
     setIsLoading(true);
@@ -199,12 +201,17 @@ export default function App() {
     setIsLoading(false);
   };
 
+  const closeSidebar = () => {
+    setIsMenuOpen(false);
+    inputRef.current?.focus();
+  };
+
   return (
     <div className="flex flex-col h-screen bg-gray-100">
       <Toolbar toggleSidebar={toggleSidebar} />
       <ConversationsMenu
         isMenuOpen={isMenuOpen}
-        toggleSidebar={toggleSidebar}
+        closeSidebar={closeSidebar}
       />
       <ScrollContainer messages={messages} className="p-4 space-y-4">
         {messages.map((msg, index) => (
@@ -219,6 +226,9 @@ export default function App() {
       {/* Input Area */}
       <div className={`p-4 bg-white border-t block relative max-h-[25%]`}>
         <textarea
+          ref={inputRef}
+          autoFocus
+          id="text-input"
           value={inputMessage}
           onChange={(e) => setInputMessage(e.target.value)}
           onKeyDown={(e) => {

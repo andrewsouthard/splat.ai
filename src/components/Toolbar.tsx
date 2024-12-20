@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 import { useSettingsStore } from "../store/settingsStore";
 import { useConversationStore } from "../store/conversationStore";
 import { useShallow } from "zustand/react/shallow";
-import { getBlankConversation } from "./ConversationsMenu";
 
 interface ToolbarProps {
   toggleSidebar: () => void;
@@ -19,10 +18,10 @@ const Toolbar = ({ toggleSidebar }: ToolbarProps) => {
     setSelectedModel,
     setAvailableModels,
   } = useSettingsStore();
-  const [setConversations, setActiveConversationId] = useConversationStore(
+  const [setConversations, addConversation] = useConversationStore(
     useShallow((state) => [
       state.setConversations,
-      state.setActiveConversationId,
+      state.addConversation,
     ])
   );
 
@@ -54,9 +53,8 @@ const Toolbar = ({ toggleSidebar }: ToolbarProps) => {
   }, [availableModels]);
 
   const clearConversations = () => {
-    const blankConvo = getBlankConversation();
-    setConversations([blankConvo]);
-    setActiveConversationId(blankConvo.id);
+    setConversations([]);
+  addConversation();
   };
 
   return (
