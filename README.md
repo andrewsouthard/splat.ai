@@ -1,4 +1,6 @@
-# splat.ai
+<p align="center">
+<img src="logo.png" alt="splat.ai logo">
+</p>
 
 splat.ai is a MacOS app that allows you to chat with your favorite AI models using [Ollama](https://ollama.ai/).
 
@@ -6,7 +8,9 @@ splat.ai is a MacOS app that allows you to chat with your favorite AI models usi
 - 🔒 Secure: Everything runs 100% locally on your machine, no data leaves your computer.
 - 🔃 Customizable: Configure your own API URL and models.
 
+<p align="center">
 <img src="screenshot.png" alt="splat.ai screenshot" style="width: 450px;" />
+</p>
 
 ## Getting Started
 
@@ -66,3 +70,11 @@ yarn install
 ```
 yarn run tauri dev
 ```
+
+
+## Releasing
+
+Releases are done through Github Actions. To prepare for a release, first bump the version using `tauri-version`. To bump the patch version, run:
+
+```bash
+npx tauri-version@latest patch
