@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { RefreshCcw, Square } from "lucide-react";
 import { register } from "@tauri-apps/plugin-global-shortcut";
-import { moveWindow, Position } from "@tauri-apps/plugin-positioner";
 import "./App.css";
 import { ScrollContainer } from "./components/ScrollContainer";
 import ChatMessage from "./components/ChatMessage";
@@ -13,6 +12,7 @@ import { useShallow } from "zustand/react/shallow";
 import ConversationsMenu from "./components/ConversationsMenu";
 import { Window } from "@tauri-apps/api/window";
 import { useCommandN } from "./hooks/useCommandN";
+import { debounce } from "lodash-es";
 
 export default function App() {
   const [
@@ -30,21 +30,22 @@ export default function App() {
       state.updateConversationSummary,
     ])
   );
-  useCommandN();
+  const debouncedSetMessages = debounce(setConversationMessages);
   const [isLoading, setIsLoading] = useState(false);
   const keepStreamingRef = useRef(true);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [inputMessage, setInputMessage] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
   const { selectedModel } = useSettingsStore();
+  useCommandN();
 
   useEffect(() => {
     async function setup() {
-      moveWindow(Position.TopRight);
       await register("Option+Space", async () => {
         const currentWindow = await Window.getCurrent();
         currentWindow.setFocus();
-        document.getElementById("text-input")?.focus();
+        inputRef.current?.focus();
       });
     }
     setup();
@@ -62,11 +63,8 @@ export default function App() {
     if (activeConversationId) switchConversation(activeConversationId);
   }, [activeConversationId]);
 
-  // Need to write messages to conversationMessages when they change and setMessages
   useEffect(() => {
-    if (messages.length > 0) {
-      setConversationMessages(messages);
-    }
+    debouncedSetMessages(messages);
   }, [messages]);
 
   const toggleSidebar = () => {
@@ -203,12 +201,17 @@ export default function App() {
     setIsLoading(false);
   };
 
+  const closeSidebar = () => {
+    setIsMenuOpen(false);
+    inputRef.current?.focus();
+  };
+
   return (
     <div className="flex flex-col h-screen bg-gray-100">
       <Toolbar toggleSidebar={toggleSidebar} />
       <ConversationsMenu
         isMenuOpen={isMenuOpen}
-        toggleSidebar={toggleSidebar}
+        closeSidebar={closeSidebar}
       />
       <ScrollContainer messages={messages} className="p-4 space-y-4">
         {messages.map((msg, index) => (
@@ -223,6 +226,7 @@ export default function App() {
       {/* Input Area */}
       <div className={`p-4 bg-white border-t block relative max-h-[25%]`}>
         <textarea
+          ref={inputRef}
           autoFocus
           id="text-input"
           value={inputMessage}
