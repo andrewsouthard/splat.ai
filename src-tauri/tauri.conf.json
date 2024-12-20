@@ -25,6 +25,8 @@
     "active": true,
     "targets": "dmg",
     "icon": [
+      "icons/icon.ico",
+      "icons/icon.png",
       "icons/icon.icns",
       "icons/icon_16x16.png",
       "icons/icon_32x32.png",

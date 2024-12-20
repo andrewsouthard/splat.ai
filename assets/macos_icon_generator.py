@@ -80,13 +80,10 @@ def apply_mask(image, mask_surface):
     return output
 
 def generate_icon_sizes(original_image):
-    sizes = [16, 32, 64, 128, 256, 512, 1024]
-    icons = {}
-    for size in sizes:
-        corner_radius = size * 0.225  # Approximately 45% of half the width
-        mask_surface = create_rounded_icon(size, corner_radius)
-        icons[size] = apply_mask(original_image, mask_surface)
-    return icons
+    size = 1024
+    corner_radius = size * 0.225  # Approximately 45% of half the width
+    mask_surface = create_rounded_icon(size, corner_radius)
+    return apply_mask(original_image, mask_surface)
 
 def main():
     parser = argparse.ArgumentParser(description="Generate macOS app icons from an input image.")
@@ -98,9 +95,10 @@ def main():
     os.makedirs(args.output, exist_ok=True)
 
     original_image = Image.open(args.input_image)
-    icons = generate_icon_sizes(original_image)
-    for size, icon in icons.items():
-        icon.save(os.path.join(args.output, f"icon_{size}x{size}.png"))
+    icon = generate_icon_sizes(original_image)
+    # for size, icon in icons.items():
+    size = 1024
+    icon.save(os.path.join(args.output, f"icon_{size}x{size}.png"))
     print(f"Icon generation complete! Icons saved in {args.output}")
 
 if __name__ == "__main__":
