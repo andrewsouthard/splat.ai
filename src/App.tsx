@@ -199,64 +199,63 @@ export default function App() {
     setActiveConversationId(id);
     setMessages(newConvo?.messages || []);
     setIsLoading(false);
-  };
-
-  const closeSidebar = () => {
-    setIsMenuOpen(false);
     inputRef.current?.focus();
   };
 
   return (
     <div className="flex flex-col h-screen bg-gray-100">
       <Toolbar toggleSidebar={toggleSidebar} />
-      <ConversationsMenu
-        isMenuOpen={isMenuOpen}
-        closeSidebar={closeSidebar}
-      />
-      <ScrollContainer messages={messages} className="p-4 space-y-4">
-        {messages.map((msg, index) => (
-          <ChatMessage key={index} role={msg.role} content={msg.content} />
-        ))}
-        {isLoading && messages[messages.length - 1]?.role === "user" && (
-          <div className="relative">
-            <RefreshCcw className="animate-spin" />
-          </div>
-        )}
-      </ScrollContainer>
-      {/* Input Area */}
-      <div className={`p-4 bg-white border-t block relative max-h-[25%]`}>
-        <textarea
-          ref={inputRef}
-          autoFocus
-          id="text-input"
-          value={inputMessage}
-          onChange={(e) => setInputMessage(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && !e.shiftKey) {
-              e.preventDefault();
-              sendMessage();
-              const target = e.target as HTMLTextAreaElement;
-              target.style.height = `44px`;
-            }
-          }}
-          placeholder="Type your message..."
-          className="flex-grow p-2 border rounded-lg w-full min-h-11 resize-none overflow-y-scroll max-h-full outline-none"
-          rows={1}
-          onInput={(e) => {
-            const target = e.target as HTMLTextAreaElement;
-            target.style.height = "auto";
-            target.style.height = `${target.scrollHeight}px`;
-          }}
+      <div className="flex-row flex flex-grow overflow-y-hidden relative">
+        <ConversationsMenu
+          isMenuOpen={isMenuOpen}
         />
-        {isLoading && (
-          <button
-            onClick={stopResponse}
-            className="absolute top-8 right-8"
-            title="Stop"
-          >
-            <Square className="h-3 w-3 bg-black rounded-sm" />
-          </button>
-        )}
+        <div className="flex flex-col overflow-y-hidden mt-1">
+          <ScrollContainer messages={messages} className="mt-auto p-4 space-y-4 flex-col">
+            {messages.map((msg, index) => (
+              <ChatMessage key={index} role={msg.role} content={msg.content} />
+            ))}
+            {isLoading && messages[messages.length - 1]?.role === "user" && (
+              <div className="relative">
+                <RefreshCcw className="animate-spin" />
+              </div>
+            )}
+          </ScrollContainer>
+          {/* Input Area */}
+          <div className={`p-4 bg-white border-t block relative flex w-full`}>
+            <textarea
+              ref={inputRef}
+              autoFocus
+              id="text-input"
+              value={inputMessage}
+              onChange={(e) => setInputMessage(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  sendMessage();
+                  const target = e.target as HTMLTextAreaElement;
+                  target.style.height = `44px`;
+                }
+              }}
+              placeholder="Type your message..."
+              className="flex-grow p-2 border rounded-lg w-full min-h-11 resize-none overflow-y-scroll max-h-full outline-none"
+              rows={1}
+              onInput={(e) => {
+                const target = e.target as HTMLTextAreaElement;
+                target.style.height = "auto";
+                target.style.height = `${target.scrollHeight}px`;
+              }}
+            />
+            {isLoading && (
+              <button
+                onClick={stopResponse}
+                className="absolute top-8 right-8"
+                title="Stop"
+              >
+                <Square className="h-3 w-3 bg-black rounded-sm" />
+              </button>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );

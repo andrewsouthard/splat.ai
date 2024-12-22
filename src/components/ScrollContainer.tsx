@@ -41,7 +41,7 @@ export function ScrollContainer({
       }
     };
 
-    const scrollContainer = document.querySelector(".overflow-y-auto");
+    const scrollContainer = document.querySelector(".overflow-y-scroll");
     if (scrollContainer) {
       scrollContainer.addEventListener("wheel", handleScroll as EventListener);
 
@@ -55,7 +55,7 @@ export function ScrollContainer({
   }, []);
 
   return (
-    <div className={`overflow-y-auto h-screen ${className}`}>
+    <div className={`overflow-y-scroll h-full ${className}`}>
       {children}
       <div ref={chatEndRef} />
     </div>
