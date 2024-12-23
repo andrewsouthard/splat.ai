@@ -2,6 +2,17 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Match MacOS font size */
+html {
+  font-size: 14px;
+}
+
+/* Match MacOS cursor behavior */
+*, a, button {
+  cursor: default;
+  user-select: none;
+}
+
 .typewriter {
   display: inline-block;
   overflow: hidden;

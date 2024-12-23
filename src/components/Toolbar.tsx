@@ -1,4 +1,4 @@
-import { PanelLeft, Trash2, Settings } from "lucide-react";
+import { PanelLeft, Trash2, Settings, MailPlus } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useSettingsStore } from "../store/settingsStore";
 import { useConversationStore } from "../store/conversationStore";
@@ -63,12 +63,16 @@ const Toolbar = ({ toggleSidebar }: ToolbarProps) => {
   }
 
   return (
-    <div className="flex justify-between items-center p-2 bg-gray-200">
+    <div className="flex justify-between items-center p-2 bg-[rgba(84,84,84,1)">
       <button onClick={toggleSidebar} className="flex items-center h-5 w-5">
         <PanelLeft className="h-5 w-5 stroke-width-1" />
       </button>
-      <button className="ml-auto mr-4" onClick={removeConversation}>
-        <Trash2 />
+
+      <button className="ml-auto mr-1" onClick={addConversation}>
+        <MailPlus className="h-5 w-5 stroke-width-1" />
+      </button>
+      <button className="mx-4" onClick={removeConversation}>
+        <Trash2 className="h-5 w-5 stroke-width-1" />
       </button>
       <button
         onClick={() => setShowSettings((prev) => !prev)}

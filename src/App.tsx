@@ -209,7 +209,7 @@ export default function App() {
         <ConversationsMenu
           isMenuOpen={isMenuOpen}
         />
-        <div className="flex flex-col overflow-y-hidden mt-1">
+        <div className="flex flex-col overflow-y-hidden mt-1 w-full">
           <ScrollContainer messages={messages} className="mt-auto p-4 space-y-4 flex-col">
             {messages.map((msg, index) => (
               <ChatMessage key={index} role={msg.role} content={msg.content} />
