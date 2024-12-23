@@ -1,4 +1,4 @@
-import { Menu, Settings } from "lucide-react";
+import { PanelLeft, Trash2, Settings } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useSettingsStore } from "../store/settingsStore";
 import { useConversationStore } from "../store/conversationStore";
@@ -18,10 +18,11 @@ const Toolbar = ({ toggleSidebar }: ToolbarProps) => {
     setSelectedModel,
     setAvailableModels,
   } = useSettingsStore();
-  const [setConversations, addConversation] = useConversationStore(
+  const [setConversations, addConversation, deleteActiveConversation] = useConversationStore(
     useShallow((state) => [
       state.setConversations,
       state.addConversation,
+      state.deleteActiveConversation
     ])
   );
 
@@ -54,19 +55,26 @@ const Toolbar = ({ toggleSidebar }: ToolbarProps) => {
 
   const clearConversations = () => {
     setConversations([]);
-  addConversation();
+    addConversation();
   };
+
+  const removeConversation = () => {
+    deleteActiveConversation();
+  }
 
   return (
     <div className="flex justify-between items-center p-2 bg-gray-200">
-      <button onClick={toggleSidebar} className="flex items-center">
-        <Menu className="h-6 w-6" />
+      <button onClick={toggleSidebar} className="flex items-center h-5 w-5">
+        <PanelLeft className="h-5 w-5 stroke-width-1" />
+      </button>
+      <button className="ml-auto mr-4" onClick={removeConversation}>
+        <Trash2 />
       </button>
       <button
         onClick={() => setShowSettings((prev) => !prev)}
         className="flex items-center"
       >
-        <Settings className="h-6 w-6" />
+        <Settings className="h-5 w-5 stroke-width-1" />
       </button>
 
       {showSettings && (
