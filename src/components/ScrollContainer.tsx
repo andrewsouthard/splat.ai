@@ -13,6 +13,7 @@ export function ScrollContainer({
   className = "",
 }: ScrollContainerProps) {
   const [shouldAutoScroll, setShouldAutoScroll] = useState(true);
+  const containerRef = useRef<HTMLDivElement>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -31,8 +32,8 @@ export function ScrollContainer({
         const container = e.currentTarget as HTMLElement;
         const isAtBottom =
           container.scrollHeight -
-            container.scrollTop -
-            container.clientHeight <
+          container.scrollTop -
+          container.clientHeight <
           10;
 
         if (isAtBottom) {
@@ -41,7 +42,7 @@ export function ScrollContainer({
       }
     };
 
-    const scrollContainer = document.querySelector(".overflow-y-scroll");
+    const scrollContainer = containerRef.current;
     if (scrollContainer) {
       scrollContainer.addEventListener("wheel", handleScroll as EventListener);
 
@@ -55,7 +56,7 @@ export function ScrollContainer({
   }, []);
 
   return (
-    <div className={`overflow-y-scroll h-full ${className}`}>
+    <div ref={containerRef} className={`overflow-y-scroll h-full ${className}`}>
       {children}
       <div ref={chatEndRef} />
     </div>

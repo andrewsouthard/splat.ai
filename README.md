@@ -20,17 +20,7 @@ Download and Install [Ollama](https://ollama.ai/). Make sure is running before p
 
 2. Pull a model to use
 
-You can use [any model](https://ollama.ai/models) supported by Ollama. To use a model, run the following command in the terminal:
-
-```bash
-ollama pull <model_name>
-```
-
-For example, to pull the `llama3.2` model, run the following command:
-
-```bash
-ollama pull llama3.2
-```
+You can use [any model](https://ollama.ai/models) supported by Ollama. To use a model, click the "Settings" button, type in the name of the model you want to use and click "Pull".
 
 3. Download the app and enable running it
 

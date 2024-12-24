@@ -40,8 +40,8 @@ export default function ConversationsMenu({
 
   return (
     <div
-      className={`z-10 bg-white shadow-lg overflow-y-scroll max-w-[300px] ${
-        isMenuOpen ? "h-full w-full px-4" : "w-0 h-0"
+      className={`z-10 bg-white shadow-lg overflow-y-scroll max-w-[280px] ${
+        isMenuOpen ? "h-full w-full" : "w-0 h-0"
       }`}
     >
       {conversations
