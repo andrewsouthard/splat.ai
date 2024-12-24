@@ -12,6 +12,7 @@ interface ConversationStore {
     conversations: Conversation[];
     activeConversationId: string | null;
     addConversation: () => void;
+    deleteActiveConversation: () => void;
     setActiveConversationId: (id: string) => void;
     conversationMessages: () => Message[];
     setConversationMessages: (messages: Message[]) => void;
@@ -24,7 +25,7 @@ const getBlankConversation = () => ({
     id: crypto.randomUUID(),
     messages: [],
     summary: "New Conversation",
-  });
+});
 
 
 export const useConversationStore = create<ConversationStore>()(
@@ -34,11 +35,19 @@ export const useConversationStore = create<ConversationStore>()(
             activeConversationId: null,
             addConversation: () => {
                 // Don't do anything if this conversation is empty
-               if(get().conversationMessages().length === 0) return;
+                if (get().conversationMessages().length === 0) return;
                 const newConvo = getBlankConversation();
                 set((state) => ({
                     conversations: [...state.conversations, newConvo],
                     activeConversationId: newConvo.id,
+                }));
+            },
+            deleteActiveConversation: () => {
+                const oldCoversationIdx = get().conversations.findIndex((c) => c.id === get().activeConversationId);
+                const newConversationIdx = Math.max(oldCoversationIdx - 1, 0)
+                set((state) => ({
+                    activeConversationId: state.conversations[newConversationIdx].id,
+                    conversations: state.conversations.filter((c, idx) => idx !== oldCoversationIdx),
                 }));
             },
             setActiveConversationId: (id: string) => set({ activeConversationId: id }),

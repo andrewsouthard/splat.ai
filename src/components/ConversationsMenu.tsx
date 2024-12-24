@@ -5,12 +5,10 @@ import { useEffect } from "react";
 
 interface ConversationsMenuProps {
   isMenuOpen: boolean;
-  closeSidebar: () => void;
 }
 
 export default function ConversationsMenu({
   isMenuOpen,
-  closeSidebar,
 }: ConversationsMenuProps) {
   const {
     conversations,
@@ -34,19 +32,16 @@ export default function ConversationsMenu({
 
   const onAddConversation = () => {
     addConversation();
-    closeSidebar();
   };
 
   const onConversationClick = (id: string) => {
     setActiveConversationId(id);
-    closeSidebar();
   };
 
   return (
     <div
-      onMouseLeave={closeSidebar}
-      className={`p-4 fixed h-full z-10 top-0 left-0 w-64 h-screen bg-white shadow-lg transition-transform duration-100 ease-in-out overflow-y-scroll ${
-        isMenuOpen ? "translate-x-0" : "-translate-x-full"
+      className={`z-10 bg-white shadow-lg overflow-y-scroll max-w-[280px] ${
+        isMenuOpen ? "h-full w-full" : "w-0 h-0"
       }`}
     >
       {conversations
