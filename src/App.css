@@ -8,7 +8,7 @@ html {
 }
 
 /* Match MacOS cursor behavior */
-*, a, button {
+a, button {
   cursor: default;
   user-select: none;
 }
