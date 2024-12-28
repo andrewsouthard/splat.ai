@@ -1,6 +1,6 @@
 import { useState } from "react";
 import "./App.css";
-import Toolbar from "./components/Toolbar";
+import Toolbar from "./elements/Toolbar";
 import Home from "./screens/home";
 import Settings from "./screens/Settings";
 

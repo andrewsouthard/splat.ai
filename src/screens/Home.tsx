@@ -1,13 +1,13 @@
 import { useState, useRef, useEffect } from "react";
-import { RefreshCcw, Square } from "lucide-react";
+import { RefreshCcw, Square, Settings } from "lucide-react";
 import { register } from "@tauri-apps/plugin-global-shortcut";
-import { ScrollContainer } from "../components/ScrollContainer";
-import ChatMessage from "../components/ChatMessage";
+import { ScrollContainer } from "../elements/ScrollContainer";
+import ChatMessage from "../elements/ChatMessage";
 import { useSettingsStore } from "../store/settingsStore";
 import { useConversationStore } from "../store/conversationStore";
 import { Message } from "../types";
 import { useShallow } from "zustand/react/shallow";
-import ConversationsMenu from "../components/ConversationsMenu";
+import ConversationsMenu from "../elements/ConversationsMenu";
 import { Window } from "@tauri-apps/api/window";
 import * as useCommandN from "../hooks/useCommandN";
 import { debounce } from "lodash-es";
@@ -34,7 +34,13 @@ export default function Home({isMenuOpen}: {isMenuOpen: boolean}) {
     const inputRef = useRef<HTMLTextAreaElement>(null);
     const [inputMessage, setInputMessage] = useState("");
     const [messages, setMessages] = useState<Message[]>([]);
-    const { selectedModel } = useSettingsStore();
+    const { selectedModel, availableModels, setSelectedModel } = useSettingsStore(
+        useShallow((state) => ({
+            selectedModel: state.selectedModel,
+            availableModels: state.availableModels,
+            setSelectedModel: state.setSelectedModel,
+        }))
+    );
     useCommandN.useCommandN();
 
     useEffect(() => {
@@ -212,7 +218,7 @@ export default function Home({isMenuOpen}: {isMenuOpen: boolean}) {
                     )}
                 </ScrollContainer>
                 {/* Input Area */}
-                <div className={`p-4 bg-white border-t block relative flex w-full`}>
+                <div className={`p-4 bg-white border-t block relative flex w-full flex-col`}>
                     <textarea
                         ref={inputRef}
                         autoFocus
@@ -236,6 +242,20 @@ export default function Home({isMenuOpen}: {isMenuOpen: boolean}) {
                             target.style.height = `${target.scrollHeight}px`;
                         }}
                     />
+                    <div className="flex items-center mt-2 text-sm text-gray-600">
+                        <Settings className="w-4 h-4 mr-1" />
+                        <select
+                            value={selectedModel}
+                            onChange={(e) => setSelectedModel(e.target.value)}
+                            className="bg-transparent border-none outline-none cursor-pointer hover:text-gray-900 transition-colors"
+                        >
+                            {availableModels.map((model) => (
+                                <option key={model} value={model}>
+                                    {model}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
                     {isLoading && (
                         <button
                             onClick={stopResponse}
