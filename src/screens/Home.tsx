@@ -39,6 +39,7 @@ export default function Home({ isMenuOpen }: { isMenuOpen: boolean }) {
             selectedModel: state.selectedModel,
         }))
     );
+    const abortControllerRef = useRef<AbortController | null>(null);
     useCommandN();
 
     useEffect(() => {
@@ -69,7 +70,10 @@ export default function Home({ isMenuOpen }: { isMenuOpen: boolean }) {
     }, [messages]);
 
     const stopResponse = () => {
-        console.log("stopping");
+        if (abortControllerRef.current) {
+            abortControllerRef.current.abort();
+            abortControllerRef.current = null;
+        }
         keepStreamingRef.current = false;
     };
 
@@ -86,6 +90,7 @@ export default function Home({ isMenuOpen }: { isMenuOpen: boolean }) {
         }
 
         setIsLoading(true);
+        abortControllerRef.current = new AbortController();
 
         const assistantMessageId = crypto.randomUUID();
         keepStreamingRef.current = true;
@@ -107,6 +112,7 @@ export default function Home({ isMenuOpen }: { isMenuOpen: boolean }) {
                 headers: {
                     "Content-Type": "application/json",
                 },
+                signal: abortControllerRef.current.signal,
                 body: JSON.stringify({
                     model: selectedModel,
                     messages: newMessages,
@@ -167,24 +173,26 @@ export default function Home({ isMenuOpen }: { isMenuOpen: boolean }) {
                     }
                 }
             }
-        } catch (error: unknown) {
-            if (error instanceof Error && error.name === "AbortError") {
-                console.log("Response was stopped by user");
-            } else {
-                console.error("Error:", error);
-                setMessages((prev) => [
-                    ...prev,
-                    {
-                        id: assistantMessageId,
-                        role: "assistant",
-                        content:
-                            "Sorry, there was an error processing your request. Please ensure Ollama is running and try again.",
-                        timestamp: new Date(),
-                        complete: true,
-                    },
-                ]);
+        } catch (error) {
+            if (error instanceof DOMException && error.name === 'AbortError') {
+                console.log("Request aborted by user");
+                setIsLoading(false);
+                return;
             }
+            console.error("Error:", error);
+            setMessages((prev) => [
+                ...prev,
+                {
+                    id: assistantMessageId,
+                    role: "assistant",
+                    content: "Sorry, there was an error processing your request. Please ensure Ollama is running and try again.",
+                    timestamp: new Date(),
+                    complete: true,
+                },
+            ]);
+            setIsLoading(false);
         } finally {
+            abortControllerRef.current = null;
             keepStreamingRef.current = false;
             setIsLoading(false);
         }
