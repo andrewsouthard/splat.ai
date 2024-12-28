@@ -7,7 +7,7 @@ interface ScrollContainerProps {
   className?: string;
 }
 
-export function ScrollContainer({
+export default function ScrollContainer({
   children,
   messages,
   className = "",

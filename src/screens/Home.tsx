@@ -1,18 +1,19 @@
 import { useState, useRef, useEffect } from "react";
-import { RefreshCcw, Square, Settings } from "lucide-react";
+import { RefreshCcw } from "lucide-react";
 import { register } from "@tauri-apps/plugin-global-shortcut";
-import { ScrollContainer } from "../elements/ScrollContainer";
-import ChatMessage from "../elements/ChatMessage";
-import { useSettingsStore } from "../store/settingsStore";
-import { useConversationStore } from "../store/conversationStore";
-import { Message } from "../types";
+import ScrollContainer from "@/elements/ScrollContainer";
+import ChatMessage from "@/elements/ChatMessage";
+import { useSettingsStore } from "@/store/settingsStore";
+import { useConversationStore } from "@/store/conversationStore";
+import { Message } from "@/types";
 import { useShallow } from "zustand/react/shallow";
-import ConversationsMenu from "../elements/ConversationsMenu";
+import ConversationsMenu from "@/elements/ConversationsMenu";
 import { Window } from "@tauri-apps/api/window";
-import * as useCommandN from "../hooks/useCommandN";
+import { useCommandN } from "@/hooks/useCommandN";
 import { debounce } from "lodash-es";
+import InputArea from "@/elements/InputArea";
 
-export default function Home({isMenuOpen}: {isMenuOpen: boolean}) {
+export default function Home({ isMenuOpen }: { isMenuOpen: boolean }) {
     const [
         conversations,
         activeConversationId,
@@ -32,16 +33,13 @@ export default function Home({isMenuOpen}: {isMenuOpen: boolean}) {
     const [isLoading, setIsLoading] = useState(false);
     const keepStreamingRef = useRef(true);
     const inputRef = useRef<HTMLTextAreaElement>(null);
-    const [inputMessage, setInputMessage] = useState("");
     const [messages, setMessages] = useState<Message[]>([]);
-    const { selectedModel, availableModels, setSelectedModel } = useSettingsStore(
+    const { selectedModel } = useSettingsStore(
         useShallow((state) => ({
             selectedModel: state.selectedModel,
-            availableModels: state.availableModels,
-            setSelectedModel: state.setSelectedModel,
         }))
     );
-    useCommandN.useCommandN();
+    useCommandN();
 
     useEffect(() => {
         async function setup() {
@@ -75,15 +73,15 @@ export default function Home({isMenuOpen}: {isMenuOpen: boolean}) {
         keepStreamingRef.current = false;
     };
 
-    const sendMessage = async () => {
-        if (!inputMessage.trim() || isLoading) return;
+    const sendMessage = async (message: string) => {
+        if (!message.trim() || isLoading) return;
         const activeConvo = conversations.find(
             (c) => c.id === activeConversationId
         );
         if (activeConvo && messages.length === 0) {
             // set the summary of the active conversation to the input message via setConversations
             // this will trigger a re-render of the conversation list
-            const summary = inputMessage.trim().substring(0, 100);
+            const summary = message.trim().substring(0, 100);
             updateConversationSummary(activeConvo.id, summary);
         }
 
@@ -95,14 +93,13 @@ export default function Home({isMenuOpen}: {isMenuOpen: boolean}) {
         const newMessage: Message = {
             id: crypto.randomUUID(),
             role: "user",
-            content: inputMessage,
+            content: message,
             timestamp: new Date(),
             complete: true,
         };
 
         const newMessages = [...messages, newMessage];
         setMessages(newMessages);
-        setInputMessage("");
 
         try {
             const response = await fetch("http://localhost:11434/api/chat", {
@@ -217,55 +214,11 @@ export default function Home({isMenuOpen}: {isMenuOpen: boolean}) {
                         </div>
                     )}
                 </ScrollContainer>
-                {/* Input Area */}
-                <div className={`p-4 bg-white border-t block relative flex w-full flex-col`}>
-                    <textarea
-                        ref={inputRef}
-                        autoFocus
-                        id="text-input"
-                        value={inputMessage}
-                        onChange={(e) => setInputMessage(e.target.value)}
-                        onKeyDown={(e) => {
-                            if (e.key === "Enter" && !e.shiftKey) {
-                                e.preventDefault();
-                                sendMessage();
-                                const target = e.target as HTMLTextAreaElement;
-                                target.style.height = `44px`;
-                            }
-                        }}
-                        placeholder="Type your message..."
-                        className="flex-grow p-2 border rounded-lg w-full min-h-11 resize-none overflow-y-scroll max-h-full outline-none"
-                        rows={1}
-                        onInput={(e) => {
-                            const target = e.target as HTMLTextAreaElement;
-                            target.style.height = "auto";
-                            target.style.height = `${target.scrollHeight}px`;
-                        }}
-                    />
-                    <div className="flex items-center mt-2 text-sm text-gray-600">
-                        <Settings className="w-4 h-4 mr-1" />
-                        <select
-                            value={selectedModel}
-                            onChange={(e) => setSelectedModel(e.target.value)}
-                            className="bg-transparent border-none outline-none cursor-pointer hover:text-gray-900 transition-colors"
-                        >
-                            {availableModels.map((model) => (
-                                <option key={model} value={model}>
-                                    {model}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-                    {isLoading && (
-                        <button
-                            onClick={stopResponse}
-                            className="absolute top-8 right-8"
-                            title="Stop"
-                        >
-                            <Square className="h-3 w-3 bg-black rounded-sm" />
-                        </button>
-                    )}
-                </div>
+                <InputArea
+                    sendMessage={sendMessage}
+                    isLoading={isLoading}
+                    stopResponse={stopResponse}
+                />
             </div>
         </div>
     );
