@@ -91,21 +91,6 @@ export default function Settings() {
     return (
         <div className="bg-grey-300 p-4">
             <div className="mb-4">
-                <label htmlFor="model-select">Model</label>
-                <select
-                    className="ml-2 border rounded p-1"
-                    id="model-select"
-                    value={selectedModel}
-                    onChange={(e) => setSelectedModel(e.target.value)}
-                >
-                    {availableModels.map((model: string) => (
-                        <option key={model} value={model}>
-                            {model}
-                        </option>
-                    ))}
-                </select>
-            </div>
-            <div className="mb-4">
                 <label htmlFor="new-model-input">Pull New Model</label>
                 <div className="flex items-center">
                     <input

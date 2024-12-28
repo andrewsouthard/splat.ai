@@ -38,7 +38,7 @@ const Toolbar = ({ toggleSidebar, setShowSettings }: ToolbarProps) => {
         onClick={() => setShowSettings((prev: boolean) => !prev)}
         className="flex items-center"
       >
-        <Settings className="h-5 w-5 stroke-width-1" />
+        <Settings className="h-5 w-5" />
       </button>
     </div>
   );
