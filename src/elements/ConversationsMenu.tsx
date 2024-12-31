@@ -2,10 +2,13 @@ import { PlusCircle } from "lucide-react";
 import { useConversationStore } from "../store/conversationStore";
 import { useShallow } from "zustand/shallow";
 import { useEffect } from "react";
+import { listen } from "@tauri-apps/api/event";
+import clsx from "clsx";
 
 interface ConversationsMenuProps {
   isMenuOpen: boolean;
 }
+
 
 export default function ConversationsMenu({
   isMenuOpen,
@@ -25,6 +28,15 @@ export default function ConversationsMenu({
   );
 
   useEffect(() => {
+    const unlisten = listen('new-conversation', () => {
+      addConversation();
+    });
+    return () => {
+      unlisten.then(unlistenFn => unlistenFn())
+    }
+  }, [])
+
+  useEffect(() => {
     if (conversations.length === 0) {
       addConversation();
     }
@@ -40,18 +52,18 @@ export default function ConversationsMenu({
 
   return (
     <div
-      className={`z-10 bg-white shadow-lg overflow-y-scroll max-w-[280px] ${
-        isMenuOpen ? "h-full w-full" : "w-0 h-0"
-      }`}
+      className={
+        clsx(`z-10 bg-white shadow-lg overflow-y-scroll max-w-[280px]`, { "h-full w-full": isMenuOpen, "w-0 h-0": !isMenuOpen })
+      }
     >
       {conversations
         .map((convo, index) => (
           <button
             key={index}
             onClick={() => onConversationClick(convo.id)}
-            className={`w-full p-3 text-left border-b flex items-center gap-2 rounded-sm ${
-              convo.id === activeConversationId ? "bg-blue-500 text-white" : ""
-            }`}
+            className={
+              clsx(`w-full p-3 text-left border-b flex items-center gap-2 rounded-sm`, { "bg-blue-500 text-white": convo.id === activeConversationId })
+            }
           >
             <div className="flex-grow">{convo.summary}</div>
           </button>

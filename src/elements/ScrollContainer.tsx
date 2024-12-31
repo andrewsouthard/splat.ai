@@ -7,7 +7,7 @@ interface ScrollContainerProps {
   className?: string;
 }
 
-export function ScrollContainer({
+export default function ScrollContainer({
   children,
   messages,
   className = "",
@@ -20,9 +20,11 @@ export function ScrollContainer({
     if (shouldAutoScroll && chatEndRef.current) {
       chatEndRef.current.scrollIntoView({
         behavior: "smooth",
+        block: "end",
+        inline: "end",
       });
     }
-  }, [messages, shouldAutoScroll]);
+  }, [messages, shouldAutoScroll, chatEndRef]);
 
   useEffect(() => {
     const handleScroll = (e: WheelEvent) => {

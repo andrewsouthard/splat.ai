@@ -1,18 +1,18 @@
 import { useState, useRef, useEffect } from "react";
-import { RefreshCcw, Square } from "lucide-react";
+import { RefreshCcw } from "lucide-react";
 import { register } from "@tauri-apps/plugin-global-shortcut";
-import { ScrollContainer } from "../components/ScrollContainer";
-import ChatMessage from "../components/ChatMessage";
-import { useSettingsStore } from "../store/settingsStore";
-import { useConversationStore } from "../store/conversationStore";
-import { Message } from "../types";
+import ScrollContainer from "@/elements/ScrollContainer";
+import ChatMessage from "@/elements/ChatMessage";
+import { useSettingsStore } from "@/store/settingsStore";
+import { useConversationStore } from "@/store/conversationStore";
+import { Message } from "@/types";
 import { useShallow } from "zustand/react/shallow";
-import ConversationsMenu from "../components/ConversationsMenu";
+import ConversationsMenu from "@/elements/ConversationsMenu";
 import { Window } from "@tauri-apps/api/window";
-import * as useCommandN from "../hooks/useCommandN";
 import { debounce } from "lodash-es";
+import InputArea from "@/elements/InputArea";
 
-export default function Home({isMenuOpen}: {isMenuOpen: boolean}) {
+export default function Home({ isMenuOpen }: { isMenuOpen: boolean }) {
     const [
         conversations,
         activeConversationId,
@@ -32,10 +32,13 @@ export default function Home({isMenuOpen}: {isMenuOpen: boolean}) {
     const [isLoading, setIsLoading] = useState(false);
     const keepStreamingRef = useRef(true);
     const inputRef = useRef<HTMLTextAreaElement>(null);
-    const [inputMessage, setInputMessage] = useState("");
     const [messages, setMessages] = useState<Message[]>([]);
-    const { selectedModel } = useSettingsStore();
-    useCommandN.useCommandN();
+    const { selectedModel } = useSettingsStore(
+        useShallow((state) => ({
+            selectedModel: state.selectedModel,
+        }))
+    );
+    const abortControllerRef = useRef<AbortController | null>(null);
 
     useEffect(() => {
         async function setup() {
@@ -65,23 +68,27 @@ export default function Home({isMenuOpen}: {isMenuOpen: boolean}) {
     }, [messages]);
 
     const stopResponse = () => {
-        console.log("stopping");
+        if (abortControllerRef.current) {
+            abortControllerRef.current.abort();
+            abortControllerRef.current = null;
+        }
         keepStreamingRef.current = false;
     };
 
-    const sendMessage = async () => {
-        if (!inputMessage.trim() || isLoading) return;
+    const sendMessage = async (message: string) => {
+        if (!message.trim() || isLoading) return;
         const activeConvo = conversations.find(
             (c) => c.id === activeConversationId
         );
         if (activeConvo && messages.length === 0) {
             // set the summary of the active conversation to the input message via setConversations
             // this will trigger a re-render of the conversation list
-            const summary = inputMessage.trim().substring(0, 100);
+            const summary = message.trim().substring(0, 100);
             updateConversationSummary(activeConvo.id, summary);
         }
 
         setIsLoading(true);
+        abortControllerRef.current = new AbortController();
 
         const assistantMessageId = crypto.randomUUID();
         keepStreamingRef.current = true;
@@ -89,14 +96,13 @@ export default function Home({isMenuOpen}: {isMenuOpen: boolean}) {
         const newMessage: Message = {
             id: crypto.randomUUID(),
             role: "user",
-            content: inputMessage,
+            content: message,
             timestamp: new Date(),
             complete: true,
         };
 
         const newMessages = [...messages, newMessage];
         setMessages(newMessages);
-        setInputMessage("");
 
         try {
             const response = await fetch("http://localhost:11434/api/chat", {
@@ -104,6 +110,7 @@ export default function Home({isMenuOpen}: {isMenuOpen: boolean}) {
                 headers: {
                     "Content-Type": "application/json",
                 },
+                signal: abortControllerRef.current.signal,
                 body: JSON.stringify({
                     model: selectedModel,
                     messages: newMessages,
@@ -164,24 +171,26 @@ export default function Home({isMenuOpen}: {isMenuOpen: boolean}) {
                     }
                 }
             }
-        } catch (error: unknown) {
-            if (error instanceof Error && error.name === "AbortError") {
-                console.log("Response was stopped by user");
-            } else {
-                console.error("Error:", error);
-                setMessages((prev) => [
-                    ...prev,
-                    {
-                        id: assistantMessageId,
-                        role: "assistant",
-                        content:
-                            "Sorry, there was an error processing your request. Please ensure Ollama is running and try again.",
-                        timestamp: new Date(),
-                        complete: true,
-                    },
-                ]);
+        } catch (error) {
+            if (error instanceof DOMException && error.name === 'AbortError') {
+                console.log("Request aborted by user");
+                setIsLoading(false);
+                return;
             }
+            console.error("Error:", error);
+            setMessages((prev) => [
+                ...prev,
+                {
+                    id: assistantMessageId,
+                    role: "assistant",
+                    content: "Sorry, there was an error processing your request. Please ensure Ollama is running and try again.",
+                    timestamp: new Date(),
+                    complete: true,
+                },
+            ]);
+            setIsLoading(false);
         } finally {
+            abortControllerRef.current = null;
             keepStreamingRef.current = false;
             setIsLoading(false);
         }
@@ -211,41 +220,11 @@ export default function Home({isMenuOpen}: {isMenuOpen: boolean}) {
                         </div>
                     )}
                 </ScrollContainer>
-                {/* Input Area */}
-                <div className={`p-4 bg-white border-t block relative flex w-full`}>
-                    <textarea
-                        ref={inputRef}
-                        autoFocus
-                        id="text-input"
-                        value={inputMessage}
-                        onChange={(e) => setInputMessage(e.target.value)}
-                        onKeyDown={(e) => {
-                            if (e.key === "Enter" && !e.shiftKey) {
-                                e.preventDefault();
-                                sendMessage();
-                                const target = e.target as HTMLTextAreaElement;
-                                target.style.height = `44px`;
-                            }
-                        }}
-                        placeholder="Type your message..."
-                        className="flex-grow p-2 border rounded-lg w-full min-h-11 resize-none overflow-y-scroll max-h-full outline-none"
-                        rows={1}
-                        onInput={(e) => {
-                            const target = e.target as HTMLTextAreaElement;
-                            target.style.height = "auto";
-                            target.style.height = `${target.scrollHeight}px`;
-                        }}
-                    />
-                    {isLoading && (
-                        <button
-                            onClick={stopResponse}
-                            className="absolute top-8 right-8"
-                            title="Stop"
-                        >
-                            <Square className="h-3 w-3 bg-black rounded-sm" />
-                        </button>
-                    )}
-                </div>
+                <InputArea
+                    sendMessage={sendMessage}
+                    isLoading={isLoading}
+                    stopResponse={stopResponse}
+                />
             </div>
         </div>
     );
