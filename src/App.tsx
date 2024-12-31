@@ -1,7 +1,7 @@
 import { useState } from "react";
 import "./App.css";
 import Toolbar from "./elements/Toolbar";
-import Home from "./screens/home";
+import Home from "./screens/Home";
 import Settings from "./screens/Settings";
 
 export default function App() {
@@ -13,7 +13,7 @@ export default function App() {
 
 
   return (
-    <div className="flex flex-col h-screen bg-gray-100 relative">
+    <div className="flex flex-col h-screen bg-gray-50 relative">
       <Toolbar toggleSidebar={toggleSidebar} setShowSettings={setShowSettings} />
       {showSettings ? (
         <Settings />

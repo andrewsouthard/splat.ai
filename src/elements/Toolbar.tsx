@@ -23,7 +23,7 @@ const Toolbar = ({ toggleSidebar, setShowSettings }: ToolbarProps) => {
 
 
   return (
-    <div className="flex justify-between items-center p-2 bg-[rgba(84,84,84,1)">
+    <div className="flex justify-between items-center p-2 bg-gray-100 text-blue-500">
       <button onClick={toggleSidebar} className="flex items-center h-5 w-5">
         <PanelLeft className="h-5 w-5 stroke-width-1" />
       </button>
