@@ -9,7 +9,6 @@ import { Message } from "@/types";
 import { useShallow } from "zustand/react/shallow";
 import ConversationsMenu from "@/elements/ConversationsMenu";
 import { Window } from "@tauri-apps/api/window";
-import { useCommandN } from "@/hooks/useCommandN";
 import { debounce } from "lodash-es";
 import InputArea from "@/elements/InputArea";
 
@@ -40,7 +39,6 @@ export default function Home({ isMenuOpen }: { isMenuOpen: boolean }) {
         }))
     );
     const abortControllerRef = useRef<AbortController | null>(null);
-    useCommandN();
 
     useEffect(() => {
         async function setup() {
