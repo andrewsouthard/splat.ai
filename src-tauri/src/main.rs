@@ -2,8 +2,9 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use tauri::menu::*;
-use tauri::{AppHandle, Wry};
 use tauri::Emitter;
+use tauri::Manager;
+use tauri::{AppHandle, Wry};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     env_logger::init();
@@ -14,20 +15,50 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
         .setup(|app| {
             let menu = make_menu(&app.handle()).unwrap();
-            app.set_menu(menu);
-
+            // Don't worry about the error
+            let _ = app.set_menu(menu);
             Ok(())
         })
         .on_menu_event(|app_handle, event| {
-            // Right now this only fires for the custom "new" event
-            app_handle.emit("new-conversation", "").unwrap();
+            let binding = format!("{:?}", event.id())
+                .replacen("MenuId(\"", "", 1)
+                .replacen("\")", "", 1);
+            let menu_id = binding.trim();
+            match menu_id {
+                "preferences" => {
+                    if let Some(pref_window) = app_handle.get_webview_window("preferences") {
+                        pref_window.show().unwrap();
+                    } else {
+                        let window = tauri::webview::WebviewWindowBuilder::new(
+                            app_handle,
+                            "Settings",
+                            tauri::WebviewUrl::App("preferences.html".into()),
+                        )
+                        .title("Settings")
+                        .resizable(false)
+                        .always_on_top(true)
+                        .build()
+                        .unwrap();
+
+                        app_handle
+                            .webview_windows()
+                            .insert("preferences".to_string(), window);
+                    }
+                }
+                "new-conversation" => {
+                    app_handle.emit("new-conversation", "").unwrap();
+                }
+                _ => {
+                    println!("Unknown menu event id: {:?}", menu_id);
+                }
+            }
         })
         .run(tauri::generate_context!())?;
 
     Ok(())
 }
 
-// Copied from tauri's menu.rs default function and added a "new" option
+// Copied from tauri's menu.rs default function. Added "new" and "settings" options
 fn make_menu(app_handle: &AppHandle) -> Result<Menu<Wry>, tauri::Error> {
     #[cfg(target_os = "macos")]
     const WINDOW_SUBMENU_ID: &str = "window-submenu";
@@ -78,6 +109,12 @@ fn make_menu(app_handle: &AppHandle) -> Result<Menu<Wry>, tauri::Error> {
                 &[
                     &PredefinedMenuItem::about(app_handle, None, Some(about_metadata))?,
                     &PredefinedMenuItem::separator(app_handle)?,
+                    // &MenuItem::new(app_handle, "Settings", true, Some("Cmd+,"))?,
+                    &MenuItemBuilder::new("Settings")
+                        .accelerator("CmdOrCtrl+,")
+                        .id("preferences")
+                        .build(app_handle)?,
+                    &PredefinedMenuItem::separator(app_handle)?,
                     &PredefinedMenuItem::services(app_handle, None)?,
                     &PredefinedMenuItem::separator(app_handle)?,
                     &PredefinedMenuItem::hide(app_handle, None)?,
@@ -98,7 +135,10 @@ fn make_menu(app_handle: &AppHandle) -> Result<Menu<Wry>, tauri::Error> {
                 "File",
                 true,
                 &[
-                    &MenuItem::new(app_handle, "New", true, Some("CmdOrCtrl+N"))?,
+                    &MenuItemBuilder::new("New Conversation")
+                        .accelerator("CmdOrCtrl+N")
+                        .id("new-conversation")
+                        .build(app_handle)?,
                     &PredefinedMenuItem::close_window(app_handle, None)?,
                     #[cfg(not(target_os = "macos"))]
                     &PredefinedMenuItem::quit(app_handle, None)?,

@@ -20,9 +20,11 @@ export default function ScrollContainer({
     if (shouldAutoScroll && chatEndRef.current) {
       chatEndRef.current.scrollIntoView({
         behavior: "smooth",
+        block: "end",
+        inline: "end",
       });
     }
-  }, [messages, shouldAutoScroll]);
+  }, [messages, shouldAutoScroll, chatEndRef]);
 
   useEffect(() => {
     const handleScroll = (e: WheelEvent) => {

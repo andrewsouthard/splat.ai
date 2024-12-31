@@ -1,14 +1,12 @@
-import { PanelLeft, Trash2, Settings, MailPlus } from "lucide-react";
+import { PanelLeft, Trash2, MailPlus } from "lucide-react";
 import { useConversationStore } from "../store/conversationStore";
 import { useShallow } from "zustand/react/shallow";
-import { Dispatch, SetStateAction } from "react";
 
 interface ToolbarProps {
   toggleSidebar: () => void;
-  setShowSettings: Dispatch<SetStateAction<boolean>>;
 }
 
-const Toolbar = ({ toggleSidebar, setShowSettings }: ToolbarProps) => {
+const Toolbar = ({ toggleSidebar }: ToolbarProps) => {
   const [addConversation, deleteActiveConversation] = useConversationStore(
     useShallow((state) => [
       state.addConversation,
@@ -28,17 +26,11 @@ const Toolbar = ({ toggleSidebar, setShowSettings }: ToolbarProps) => {
         <PanelLeft className="h-5 w-5 stroke-width-1" />
       </button>
 
-      <button className="ml-auto mr-1" onClick={addConversation}>
+      <button className="ml-auto" onClick={addConversation}>
         <MailPlus className="h-5 w-5 stroke-width-1" />
       </button>
-      <button className="mx-4" onClick={removeConversation}>
+      <button className="ml-4" onClick={removeConversation}>
         <Trash2 className="h-5 w-5 stroke-width-1" />
-      </button>
-      <button
-        onClick={() => setShowSettings((prev: boolean) => !prev)}
-        className="flex items-center"
-      >
-        <Settings className="h-5 w-5" />
       </button>
     </div>
   );

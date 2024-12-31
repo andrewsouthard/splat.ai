@@ -53,7 +53,7 @@ export default function InputArea({ sendMessage, isLoading, stopResponse }: Inpu
     }
 
     return (
-        <div className={`p-4 bg-white border-t block flex w-full flex-col border`}>
+        <div className={`px-4 pt-2 bg-white border-t block flex w-full flex-col border`}>
             <div className="relative">
                 <textarea
                     ref={inputRef}
@@ -70,7 +70,7 @@ export default function InputArea({ sendMessage, isLoading, stopResponse }: Inpu
                 >
                 </textarea>
             </div>
-            <div className="flex items-center mt-2 text-sm">
+            <div className="flex items-center text-sm">
                 <div className={clsx(bottomButtonClasses,"px-1")}>
                     <Blend className="pl-1 w-5 h-5 -mr-1 mt-0.5" />
                     <Select value={selectedModel} onValueChange={setSelectedModel}>

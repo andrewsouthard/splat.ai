@@ -15,6 +15,15 @@
         "title": "splat.ai",
         "width": 600,
         "height": 800
+      },
+      {
+        "label": "preferences",
+        "url": "preferences.html",
+        "width": 400,
+        "height": 300,
+        "resizable": false,
+        "visible": false,
+        "alwaysOnTop": true
       }
     ],
     "security": {

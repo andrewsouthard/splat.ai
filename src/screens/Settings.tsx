@@ -89,7 +89,7 @@ export default function Settings() {
     };
 
     return (
-        <div className="bg-grey-300 p-4">
+        <div className="bg-gray-200 p-4 h-screen w-full">
             <div className="mb-4">
                 <label htmlFor="new-model-input">Pull New Model</label>
                 <div className="flex items-center">
