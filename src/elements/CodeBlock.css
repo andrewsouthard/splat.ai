@@ -2,14 +2,21 @@ pre.shiki {
   padding: 0.75rem;
   overflow-x: scroll;
   font-size: 0.875rem;
-  border-radius: 0.1rem;
+  border-radius: 0.25rem;
   margin-bottom: 1rem;
 }
 
 code.inline {
   font-size: 0.875rem;
-  background-color: rgba(0, 0, 0, 0.1);
-  color: rgba(0, 0, 0, 0.8);
   padding: 0.1rem 0.25rem;
   word-break: break-word;
+  border-radius: 0.25rem;
+  background-color: rgba(200, 200, 200, 1);
+  color: rgba(0, 0, 0, 0.8);
 } 
+
+[data-theme='dark'] .shiki,
+[data-theme='dark'] .shiki span {
+  background-color: var(--shiki-dark-bg) !important;
+  color: var(--shiki-dark) !important;
+}

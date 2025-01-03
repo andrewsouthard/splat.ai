@@ -10,7 +10,7 @@ interface CodeBlockProps {
   children?: React.ReactNode;
 }
 
-const CodeBlock = ({ inline, className, children }: CodeBlockProps) => {
+export default function CodeBlock({ inline, className, children }: CodeBlockProps) {
   const [highlighted, setHighlighted] = useState("<span />");
   const [copied, setCopied] = useState(false);
   const numLines = String(children).split("\n").length;
@@ -22,7 +22,10 @@ const CodeBlock = ({ inline, className, children }: CodeBlockProps) => {
       const code = String(children).replace(/\n$/, "");
       const highlightedCode = await codeToHtml(code, {
         lang,
-        theme: "one-dark-pro",
+        themes: {
+          dark: "one-dark-pro", 
+          light: "github-light",
+        }
       });
       setHighlighted(highlightedCode);
     }
@@ -43,9 +46,8 @@ const CodeBlock = ({ inline, className, children }: CodeBlockProps) => {
         {numLines >= 3 ? (
           <button
             onClick={copyToClipboard}
-            className={`mt-1 flex ml-auto items-center justify-end gap-2 p-1 text-white text-sm text-sans rounded-t ${
-              copied ? 'bg-blue-500' : 'bg-blue-400 hover:bg-blue-300'
-            }`}
+            className={`mt-1 flex ml-auto items-center justify-end gap-2 p-1 text-white text-sm text-sans rounded-t ${copied ? 'bg-blue-500' : 'bg-blue-400 hover:bg-blue-300'
+              }`}
             title="Copy to clipboard"
           >
             {copied ? (
@@ -64,4 +66,3 @@ const CodeBlock = ({ inline, className, children }: CodeBlockProps) => {
   }
 };
 
-export default CodeBlock;
