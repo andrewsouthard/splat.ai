@@ -9,6 +9,11 @@
     "beforeBuildCommand": "yarn build",
     "frontendDist": "../dist"
   },
+  "plugins": {
+    "@tauri-apps/plugin-store": {
+      "open": true
+    }
+  },
   "app": {
     "windows": [
       {
@@ -20,7 +25,7 @@
         "label": "preferences",
         "url": "preferences.html",
         "width": 400,
-        "height": 300,
+        "height": 400,
         "resizable": false,
         "visible": false,
         "alwaysOnTop": true
