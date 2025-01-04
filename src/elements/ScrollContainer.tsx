@@ -12,19 +12,29 @@ export default function ScrollContainer({
   messages,
   className = "",
 }: ScrollContainerProps) {
-  const [shouldAutoScroll, setShouldAutoScroll] = useState(true);
   const containerRef = useRef<HTMLDivElement>(null);
-  const chatEndRef = useRef<HTMLDivElement>(null);
+  const [shouldAutoScroll, setShouldAutoScroll] = useState(true);
 
-  useEffect(() => {
-    if (shouldAutoScroll && chatEndRef.current) {
-      chatEndRef.current.scrollIntoView({
-        behavior: "smooth",
-        block: "end",
-        inline: "end",
+  const scrollToBottom = () => {
+    if (containerRef.current) {
+      // Use requestAnimationFrame to ensure we get the final scroll height
+      requestAnimationFrame(() => {
+        // Add a small timeout to ensure all content is rendered
+        setTimeout(() => {
+          containerRef.current?.scrollTo({
+            top: containerRef.current.scrollHeight,
+            behavior: 'instant'
+          });
+        }, 10);
       });
     }
-  }, [messages, shouldAutoScroll, chatEndRef]);
+  };
+
+  // Handle initial scroll
+  useEffect(() => {
+    if (shouldAutoScroll)
+      scrollToBottom();
+  }, [messages]);
 
   useEffect(() => {
     const handleScroll = (e: WheelEvent) => {
@@ -58,9 +68,8 @@ export default function ScrollContainer({
   }, []);
 
   return (
-    <div ref={containerRef} className={`overflow-y-scroll h-full ${className}`}>
+    <div ref={containerRef} className={`overflow-y-scroll h-full scroll-smooth ${className}`}>
       {children}
-      <div ref={chatEndRef} />
     </div>
   );
 }
