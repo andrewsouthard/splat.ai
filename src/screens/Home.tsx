@@ -3,7 +3,6 @@ import { RefreshCcw } from "lucide-react";
 import { register } from "@tauri-apps/plugin-global-shortcut";
 import ScrollContainer from "@/elements/ScrollContainer";
 import ChatMessage from "@/elements/ChatMessage";
-import { useSettingsStore } from "@/store/settingsStore";
 import { useConversationStore } from "@/store/conversationStore";
 import { Message } from "@/types";
 import { useShallow } from "zustand/react/shallow";
@@ -11,6 +10,7 @@ import ConversationsMenu from "@/elements/ConversationsMenu";
 import { Window } from "@tauri-apps/api/window";
 import { debounce } from "lodash-es";
 import InputArea from "@/elements/InputArea";
+import { useStreamingChatApi } from "@/hooks/useApi";
 
 export default function Home({ isMenuOpen }: { isMenuOpen: boolean }) {
     const [
@@ -30,15 +30,9 @@ export default function Home({ isMenuOpen }: { isMenuOpen: boolean }) {
     );
     const debouncedSetMessages = debounce(setConversationMessages);
     const [isLoading, setIsLoading] = useState(false);
-    const keepStreamingRef = useRef(true);
+    const keepStreamingRef = useRef(false);
     const inputRef = useRef<HTMLTextAreaElement>(null);
-    const [messages, setMessages] = useState<Message[]>([]);
-    const { selectedModel } = useSettingsStore(
-        useShallow((state) => ({
-            selectedModel: state.selectedModel,
-        }))
-    );
-    const abortControllerRef = useRef<AbortController | null>(null);
+    const [messages, setMessages, sendMessage] = useStreamingChatApi(keepStreamingRef);
 
     useEffect(() => {
         async function setup() {
@@ -68,14 +62,10 @@ export default function Home({ isMenuOpen }: { isMenuOpen: boolean }) {
     }, [messages]);
 
     const stopResponse = () => {
-        if (abortControllerRef.current) {
-            abortControllerRef.current.abort();
-            abortControllerRef.current = null;
-        }
         keepStreamingRef.current = false;
     };
 
-    const sendMessage = async (message: string) => {
+    const onSendMessage = async (message: string) => {
         if (!message.trim() || isLoading) return;
         const activeConvo = conversations.find(
             (c) => c.id === activeConversationId
@@ -87,111 +77,17 @@ export default function Home({ isMenuOpen }: { isMenuOpen: boolean }) {
             updateConversationSummary(activeConvo.id, summary);
         }
 
-        setIsLoading(true);
-        abortControllerRef.current = new AbortController();
-
-        const assistantMessageId = crypto.randomUUID();
-        keepStreamingRef.current = true;
-
-        const newMessage: Message = {
-            id: crypto.randomUUID(),
-            role: "user",
-            content: message,
-            timestamp: new Date(),
-            complete: true,
-        };
-
-        const newMessages = [...messages, newMessage];
-        setMessages(newMessages);
-
         try {
-            const response = await fetch("http://localhost:11434/api/chat", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                signal: abortControllerRef.current.signal,
-                body: JSON.stringify({
-                    model: selectedModel,
-                    messages: newMessages,
-                }),
-            });
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
-            const assistantMessage: Message = {
-                id: assistantMessageId,
-                role: "assistant",
-                content: "",
+            setIsLoading(true);
+            const newMessage: Message = {
+                id: crypto.randomUUID(),
+                role: "user",
+                content: message,
                 timestamp: new Date(),
-                complete: false,
+                complete: true,
             };
-            setMessages((prev) => [...prev, assistantMessage]);
-
-            const reader = response.body?.getReader();
-            if (!reader) throw new Error("No reader available");
-
-            while (keepStreamingRef.current) {
-                const { done, value } = await reader.read();
-                if (done) break;
-
-                const chunk = new TextDecoder().decode(value);
-                const lines = chunk.split("\n").filter(Boolean);
-
-                for (const line of lines) {
-                    try {
-                        const json = JSON.parse(line);
-
-                        setMessages((prev) => {
-                            const newMessages = [...prev];
-                            const messageIndex = newMessages.findIndex(
-                                (msg) => msg.id === assistantMessageId
-                            );
-
-                            if (messageIndex !== -1) {
-                                newMessages[messageIndex] = {
-                                    ...newMessages[messageIndex],
-                                    content:
-                                        newMessages[messageIndex].content +
-                                        (json?.message?.content ?? ""),
-                                    complete: json.done,
-                                };
-                            }
-
-                            return newMessages;
-                        });
-
-                        if (json.done) {
-                            break;
-                        }
-                    } catch (e) {
-                        console.error("Error parsing JSON:", e);
-                    }
-                }
-            }
-        } catch (error) {
-            if (error instanceof DOMException && error.name === 'AbortError') {
-                console.log("Request aborted by user");
-                setIsLoading(false);
-                return;
-            }
-            console.error("Error:", error);
-            setMessages((prev) => [
-                ...prev,
-                {
-                    id: assistantMessageId,
-                    role: "assistant",
-                    content: "Sorry, there was an error processing your request. Please ensure Ollama is running and try again.",
-                    timestamp: new Date(),
-                    complete: true,
-                },
-            ]);
-            setIsLoading(false);
+            await sendMessage(newMessage);
         } finally {
-            abortControllerRef.current = null;
-            keepStreamingRef.current = false;
             setIsLoading(false);
         }
     };
@@ -221,7 +117,7 @@ export default function Home({ isMenuOpen }: { isMenuOpen: boolean }) {
                     )}
                 </ScrollContainer>
                 <InputArea
-                    sendMessage={sendMessage}
+                    sendMessage={onSendMessage}
                     isLoading={isLoading}
                     stopResponse={stopResponse}
                 />
