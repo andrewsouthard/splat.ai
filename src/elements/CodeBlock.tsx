@@ -3,6 +3,7 @@ import { codeToHtml } from "shiki";
 import { writeText } from "@tauri-apps/plugin-clipboard-manager";
 import { Clipboard, Check } from "lucide-react";
 import "./CodeBlock.css";
+import clsx from "clsx";
 
 interface CodeBlockProps {
   inline?: boolean;
@@ -23,7 +24,7 @@ export default function CodeBlock({ inline, className, children }: CodeBlockProp
       const highlightedCode = await codeToHtml(code, {
         lang,
         themes: {
-          dark: "one-dark-pro", 
+          dark: "one-dark-pro",
           light: "github-light",
         }
       });
@@ -46,8 +47,12 @@ export default function CodeBlock({ inline, className, children }: CodeBlockProp
         {numLines >= 3 ? (
           <button
             onClick={copyToClipboard}
-            className={`mt-1 flex ml-auto items-center justify-end gap-2 p-1 text-white text-sm text-sans rounded-t ${copied ? 'bg-blue-500' : 'bg-blue-400 hover:bg-blue-300'
-              }`}
+            className={clsx(`mt-1 flex ml-auto items-center justify-end gap-2 p-1 text-white text-sm text-sans rounded-t`,
+              {
+                'bg-blue-500': copied,
+                'bg-blue-400 hover:bg-blue-300': !copied
+              })
+            }
             title="Copy to clipboard"
           >
             {copied ? (
@@ -59,9 +64,10 @@ export default function CodeBlock({ inline, className, children }: CodeBlockProp
           </button>
         ) : (
           <div className="mt-4" />
-        )}
+        )
+        }
         <div dangerouslySetInnerHTML={{ __html: highlighted }} />
-      </div>
+      </div >
     );
   }
 };

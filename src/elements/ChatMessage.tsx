@@ -37,6 +37,6 @@ export default function ChatMessage({ role, content }: ChatMessageProps) {
           </Markdown>
         </article>
       </div>
-    </div >
+    </div>
   );
 }

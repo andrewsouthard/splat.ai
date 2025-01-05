@@ -31,9 +31,7 @@ export default function ScrollContainer({
     }
   });
 
-  // Handle initial scroll
   useEffect(() => {
-    console.log("Initial scroll");
     if (shouldAutoScroll)
       scrollToBottom();
   }, [messages, containerRef.current?.scrollHeight]);

@@ -199,5 +199,5 @@ export function useStreamingChatApi(keepStreamingRef: any) {
             keepStreamingRef.current = false;
         }
     };
-    return [messages, setMessages, sendMessage];
+    return { messages, setMessages, sendMessage };
 }
