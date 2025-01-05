@@ -46,6 +46,34 @@ a, button {
              blink-caret 0.75s step-end infinite;
 }
 
+.animate-dot {
+    animation: dot-blink 1s infinite;
+}
+
+@keyframes dot-blink {
+    0%, 20% {
+        opacity: 0.2;
+    }
+    50% {
+        opacity: 1;
+    }
+    80%, 100% {
+        opacity: 0.2;
+    }
+}
+
+.animate-dot1 {
+    @apply animate-[dot-blink_1s_infinite];
+}
+
+.animate-dot2 {
+    @apply animate-[dot-blink_1s_infinite_0.2s];
+}
+
+.animate-dot3 {
+    @apply animate-[dot-blink_1s_infinite_0.4s];
+}
+
 @layer base {
   :root {
     --background: 0 0% 100%;

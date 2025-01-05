@@ -1,6 +1,7 @@
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import CodeBlock from "./CodeBlock";
+import clsx from 'clsx';
 
 interface ChatMessageProps {
   role: "user" | "assistant";
@@ -10,18 +11,23 @@ interface ChatMessageProps {
 export default function ChatMessage({ role, content }: ChatMessageProps) {
   return (
     <div
-      className={`flex items-start space-x-3 ${
-        role === "user" ? "justify-end" : "justify-start"
-      }`}
+      className={clsx(
+        'flex items-start space-x-3', {
+        'justify-end': role === 'user',
+        'justify-start': role === 'assistant'
+      }
+      )}
     >
       <div
-        className={`px-4 py-2 rounded-xl max-w-[90%] ${
-          role === "user"
-            ? "bg-blue-500 text-white"
-            : "bg-white text-gray-800 border"
-        }`}
+        className={clsx(
+          'px-4 py-2 rounded-xl max-w-[90%]', {
+          'bg-blue-500 text-white': role === 'user',
+          'bg-white text-gray-800 border': role === 'assistant'
+        }
+        )}
       >
-        <article className="prose lg:prose-xl">
+        {/* The data-theme attribute is used to set the theme for the Markdown content */}
+        <article className="prose lg:prose-xl" data-theme={role === "user" ? "light" : "dark"}>
           <Markdown
             components={{ code: CodeBlock }}
             className="max-w-full"

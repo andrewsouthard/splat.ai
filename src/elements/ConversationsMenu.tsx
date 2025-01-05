@@ -1,4 +1,3 @@
-import { PlusCircle } from "lucide-react";
 import { useConversationStore } from "../store/conversationStore";
 import { useShallow } from "zustand/shallow";
 import { useEffect } from "react";
@@ -42,10 +41,6 @@ export default function ConversationsMenu({
     }
   }, [conversations]);
 
-  const onAddConversation = () => {
-    addConversation();
-  };
-
   const onConversationClick = (id: string) => {
     setActiveConversationId(id);
   };
@@ -69,13 +64,6 @@ export default function ConversationsMenu({
           </button>
         ))
         .reverse()}
-      <button
-        onClick={onAddConversation}
-        className="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100"
-      >
-        <PlusCircle className="h-5 w-5" />
-        <span>New Conversation</span>
-      </button>
     </div>
   );
 }

@@ -3,6 +3,7 @@ import { codeToHtml } from "shiki";
 import { writeText } from "@tauri-apps/plugin-clipboard-manager";
 import { Clipboard, Check } from "lucide-react";
 import "./CodeBlock.css";
+import clsx from "clsx";
 
 interface CodeBlockProps {
   inline?: boolean;
@@ -10,7 +11,7 @@ interface CodeBlockProps {
   children?: React.ReactNode;
 }
 
-const CodeBlock = ({ inline, className, children }: CodeBlockProps) => {
+export default function CodeBlock({ inline, className, children }: CodeBlockProps) {
   const [highlighted, setHighlighted] = useState("<span />");
   const [copied, setCopied] = useState(false);
   const numLines = String(children).split("\n").length;
@@ -22,7 +23,10 @@ const CodeBlock = ({ inline, className, children }: CodeBlockProps) => {
       const code = String(children).replace(/\n$/, "");
       const highlightedCode = await codeToHtml(code, {
         lang,
-        theme: "one-dark-pro",
+        themes: {
+          dark: "one-dark-pro",
+          light: "github-light",
+        }
       });
       setHighlighted(highlightedCode);
     }
@@ -43,9 +47,12 @@ const CodeBlock = ({ inline, className, children }: CodeBlockProps) => {
         {numLines >= 3 ? (
           <button
             onClick={copyToClipboard}
-            className={`mt-1 flex ml-auto items-center justify-end gap-2 p-1 text-white text-sm text-sans rounded-t ${
-              copied ? 'bg-blue-500' : 'bg-blue-400 hover:bg-blue-300'
-            }`}
+            className={clsx(`mt-1 flex ml-auto items-center justify-end gap-2 p-1 text-white text-sm text-sans rounded-t`,
+              {
+                'bg-blue-500': copied,
+                'bg-blue-400 hover:bg-blue-300': !copied
+              })
+            }
             title="Copy to clipboard"
           >
             {copied ? (
@@ -57,11 +64,11 @@ const CodeBlock = ({ inline, className, children }: CodeBlockProps) => {
           </button>
         ) : (
           <div className="mt-4" />
-        )}
+        )
+        }
         <div dangerouslySetInnerHTML={{ __html: highlighted }} />
-      </div>
+      </div >
     );
   }
 };
 
-export default CodeBlock;
