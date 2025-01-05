@@ -1,6 +1,6 @@
 [package]
 name = "splat"
-version = "0.0.4"
+version = "0.0.5"
 description = "LLM Chat App"
 authors = ["Andrew Southard"]
 edition = "2021"
