@@ -1,5 +1,6 @@
 import { ReactNode, useEffect, useRef, useState } from "react";
 import { Message } from "../types";
+import debounce from "lodash-es/debounce";
 
 interface ScrollContainerProps {
   children: ReactNode;
@@ -15,7 +16,7 @@ export default function ScrollContainer({
   const containerRef = useRef<HTMLDivElement>(null);
   const [shouldAutoScroll, setShouldAutoScroll] = useState(true);
 
-  const scrollToBottom = () => {
+  const scrollToBottom = debounce(() => {
     if (containerRef.current) {
       // Use requestAnimationFrame to ensure we get the final scroll height
       requestAnimationFrame(() => {
@@ -25,16 +26,17 @@ export default function ScrollContainer({
             top: containerRef.current.scrollHeight,
             behavior: 'instant'
           });
-        }, 10);
+        }, 50);
       });
     }
-  };
+  });
 
   // Handle initial scroll
   useEffect(() => {
+    console.log("Initial scroll");
     if (shouldAutoScroll)
       scrollToBottom();
-  }, [messages]);
+  }, [messages, containerRef.current?.scrollHeight]);
 
   useEffect(() => {
     const handleScroll = (e: WheelEvent) => {
