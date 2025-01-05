@@ -1,16 +1,15 @@
 import { useState, useRef, useEffect } from "react";
 import { RefreshCcw } from "lucide-react";
-import { register } from "@tauri-apps/plugin-global-shortcut";
 import ScrollContainer from "@/elements/ScrollContainer";
 import ChatMessage from "@/elements/ChatMessage";
 import { useConversationStore } from "@/store/conversationStore";
 import { Message } from "@/types";
 import { useShallow } from "zustand/react/shallow";
 import ConversationsMenu from "@/elements/ConversationsMenu";
-import { Window } from "@tauri-apps/api/window";
 import { debounce } from "lodash-es";
 import InputArea from "@/elements/InputArea";
 import { useStreamingChatApi } from "@/hooks/useApi";
+import useGlobalShortcut from "@/hooks/useGlobalShortcut";
 
 export default function Home({ isMenuOpen }: { isMenuOpen: boolean }) {
     const [
@@ -33,16 +32,9 @@ export default function Home({ isMenuOpen }: { isMenuOpen: boolean }) {
     const keepStreamingRef = useRef(false);
     const inputRef = useRef<HTMLTextAreaElement>(null);
     const [messages, setMessages, sendMessage] = useStreamingChatApi(keepStreamingRef);
+    useGlobalShortcut();
 
     useEffect(() => {
-        async function setup() {
-            await register("Option+Space", async () => {
-                const currentWindow = await Window.getCurrent();
-                currentWindow.setFocus();
-                inputRef.current?.focus();
-            });
-        }
-        setup();
         if (!conversations.length) {
             return;
         }

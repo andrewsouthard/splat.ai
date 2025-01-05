@@ -12,14 +12,19 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useGetModelsApi, useStreamingModelPullApi } from "@/hooks/useApi";
 import { Progress } from "@/components/ui/progress"
 import { toast } from "sonner"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+const GLOBAL_SHORTCUT_OPTIONS = ["None", "Option+Space", "Ctrl+Option+Space"]
 
 export default function Settings() {
     const {
         apiUrl,
+        globalShortcut,
         availableModels,
         selectedModel,
         setApiUrl,
         setSelectedModel,
+        setGlobalShortcut
     } = useSettingsStore();
     const [setConversations, addConversation] = useConversationStore(
         useShallow((state) => [
@@ -74,6 +79,11 @@ export default function Settings() {
         }
     }
 
+    const onChangeShortcut = (value: string) => {
+        setGlobalShortcut(value);
+        toast(`Global shortcut set to ${value}. Please restart the app.`)
+    }
+
     return (
         <div className="bg-gray-200 p-4 h-screen w-full">
             <Tabs defaultValue="general" className="w-full flex flex-col items-center">
@@ -84,7 +94,7 @@ export default function Settings() {
                     <TabsTrigger value="projects">Projects</TabsTrigger>
                 </TabsList> */}
                 <TabsContent value="general" className="w-full flex flex-col px-8">
-                    <div className="mb-4 w-fit-content">
+                    <div className="w-fit-content">
                         <Label className="font-bold" htmlFor="new-model-input">Pull New Model</Label>
                         <p className="text-xs">A full list of models can be found <button className="underline" onClick={openModelsPage}>here</button>.</p>
                         <div className="flex flex-col gap-2">
@@ -106,7 +116,6 @@ export default function Settings() {
                                 </div>
                                 {newModelName &&
                                     <Button
-                                        // variant="ghost"
                                         onClick={onPullModel}
                                         disabled={isPullingModel}
                                         className="ml-1 mt-[3px] bg-blue-500 hover:bg-blue-600"
@@ -129,16 +138,27 @@ export default function Settings() {
                             className="bg-white w-[300px] mt-1"
                         />
                     </div>
-                    <div className="flex items-center space-x-2 my-4">
+                    <div className="flex flex-col my-4">
                         <Label
-                            htmlFor="terms"
-                            className="mt-1 mr-8 font-normal text-medium text-black"
+                            htmlFor="shortcut-input"
+                            className="font-bold mt-1 mb-2"
                         >
-                            Enable Option+Space as keyboard shortcut
+                            Keyboard shortcut
                         </Label>
-                        <Checkbox id="terms" className="bg-white" />
+                        <Select name="shortcut-input" value={globalShortcut || 'None'} onValueChange={onChangeShortcut}>
+                            <SelectTrigger className="bg-white w-[180px]">
+                                <SelectValue placeholder="Select keybord shortcut" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {GLOBAL_SHORTCUT_OPTIONS.map((keyCombo) =>
+                                (<SelectItem key={keyCombo} value={keyCombo}>
+                                    {keyCombo}
+                                </SelectItem>)
+                                )}
+                            </SelectContent>
+                        </Select>
                     </div>
-                    <Button className="mt-4 bg-blue-500 hover:bg-blue-600 mx-auto w-fit" onClick={clearConversations}>Delete All Conversations</Button>
+                    <Button className="mt-2 bg-blue-500 hover:bg-blue-600 w-fit" onClick={clearConversations}>Delete All Conversations</Button>
                 </TabsContent>
                 <TabsContent value="projects" className="w-full">
                     <ProjectSettings />
