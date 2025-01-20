@@ -163,8 +163,16 @@ export function useStreamingChatApi(keepStreamingRef: any) {
                                     content:
                                         newMessages[messageIndex].content +
                                         (json?.message?.content ?? ""),
-                                    complete: json.done,
                                 };
+                                if (json.done) {
+                                    newMessages[messageIndex] = {
+                                        ...newMessages[messageIndex],
+                                        complete: true,
+                                        inputTokens: json?.prompt_eval_count,
+                                        tokens: json?.eval_count,
+                                        tokensPerSecond: Number((json.eval_count / json.eval_duration * 10 ** 9).toFixed(1))
+                                    };
+                                }
                             }
 
                             return newMessages;

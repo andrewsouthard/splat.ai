@@ -5,6 +5,9 @@ export interface Message {
     content: string;
     timestamp: Date;
     complete: boolean;
+    inputTokens?: number;
+    tokens?: number;
+    tokensPerSecond?: number;
 }
 
 export interface Conversation {

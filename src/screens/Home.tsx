@@ -101,7 +101,7 @@ export default function Home({ isMenuOpen }: { isMenuOpen: boolean }) {
           className="mt-auto p-4 space-y-4 flex-col"
         >
           {messages.map((msg, index) => (
-            <ChatMessage key={index} role={msg.role} content={msg.content} />
+            <ChatMessage key={index} message={msg} />
           ))}
           {isLoading && messages[messages.length - 1]?.role === "user" && (
             <div className="relative flex items-center p-4 w-fit rounded-xl bg-white">
