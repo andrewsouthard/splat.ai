@@ -10,6 +10,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     env_logger::init();
 
     tauri::Builder::default()
+        .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_clipboard_manager::init())
         .plugin(tauri_plugin_store::Builder::new().build())
@@ -37,10 +38,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                         )
                         .title("Settings")
                         .resizable(false)
-                        .always_on_top(true)
                         .build()
                         .unwrap();
-                        window.set_size(tauri::LogicalSize::new(400.0, 400.0)).unwrap();
+                        window
+                            .set_size(tauri::LogicalSize::new(400.0, 400.0))
+                            .unwrap();
 
                         app_handle
                             .webview_windows()
