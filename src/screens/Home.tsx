@@ -9,6 +9,7 @@ import { debounce } from "lodash-es";
 import InputArea from "@/elements/InputArea";
 import { useStreamingChatApi } from "@/hooks/useApi";
 import useGlobalShortcut from "@/hooks/useGlobalShortcut";
+import { useSettingsStore } from "@/store/settingsStore";
 
 export default function Home({ isMenuOpen }: { isMenuOpen: boolean }) {
   const [
@@ -25,6 +26,9 @@ export default function Home({ isMenuOpen }: { isMenuOpen: boolean }) {
       state.setConversationMessages,
       state.updateConversationSummary,
     ])
+  );
+  const [searchConversationMode] = useSettingsStore(
+    useShallow((state) => [state.searchConversationMode])
   );
   const debouncedSetMessages = debounce(setConversationMessages);
   const [isLoading, setIsLoading] = useState(false);
@@ -95,7 +99,17 @@ export default function Home({ isMenuOpen }: { isMenuOpen: boolean }) {
   return (
     <div className="flex-row flex flex-grow overflow-y-hidden relative">
       <ConversationsMenu isMenuOpen={isMenuOpen} />
-      <div className="flex flex-col overflow-y-hidden mt-1 w-full">
+      <div className="flex flex-col overflow-y-hidden mt-1 w-full relative">
+        {searchConversationMode == "single" && (
+          <div className="p-2 bg-gray-50 border-b absolute top-0 left-0 right-0">
+            <input
+              type="text"
+              placeholder="Search conversation..."
+              className="w-full px-3 py-1 rounded border focus:outline-none focus:border-blue-500"
+              autoFocus
+            />
+          </div>
+        )}
         <ScrollContainer
           messages={messages}
           className="mt-auto p-4 space-y-4 flex-col"

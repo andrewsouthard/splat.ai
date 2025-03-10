@@ -52,6 +52,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 "new-conversation" => {
                     app_handle.emit("new-conversation", "").unwrap();
                 }
+                "find" => {
+                    app_handle.emit("find", "").unwrap();
+                }
+                "find-all" => {
+                    app_handle.emit("find-all", "").unwrap();
+                }
                 _ => {
                     println!("Unknown menu event id: {:?}", menu_id);
                 }
@@ -160,6 +166,15 @@ fn make_menu(app_handle: &AppHandle) -> Result<Menu<Wry>, tauri::Error> {
                     &PredefinedMenuItem::copy(app_handle, None)?,
                     &PredefinedMenuItem::paste(app_handle, None)?,
                     &PredefinedMenuItem::select_all(app_handle, None)?,
+                    &PredefinedMenuItem::separator(app_handle)?,
+                    &MenuItemBuilder::new("Find")
+                        .accelerator("CmdOrCtrl+F")
+                        .id("find")
+                        .build(app_handle)?,
+                    &MenuItemBuilder::new("Find in Conversations")
+                        .accelerator("CmdOrCtrl+Shift+F")
+                        .id("find-all")
+                        .build(app_handle)?,
                 ],
             )?,
             #[cfg(target_os = "macos")]
