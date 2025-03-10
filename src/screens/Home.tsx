@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, SetStateAction } from "react";
 import ScrollContainer from "@/elements/ScrollContainer";
 import ChatMessage from "@/elements/ChatMessage";
 import { useConversationStore } from "@/store/conversationStore";
@@ -27,11 +27,16 @@ export default function Home({ isMenuOpen }: { isMenuOpen: boolean }) {
       state.updateConversationSummary,
     ])
   );
-  const [searchConversationMode] = useSettingsStore(
-    useShallow((state) => [state.searchConversationMode])
-  );
+  const [searchConversationMode, toggleSingleConversationMode] =
+    useSettingsStore(
+      useShallow((state) => [
+        state.searchConversationMode,
+        state.toggleSingleConversationMode,
+      ])
+    );
   const debouncedSetMessages = debounce(setConversationMessages);
   const [isLoading, setIsLoading] = useState(false);
+  const [searchValue, setSearchValue] = useState<string>();
   const keepStreamingRef = useRef(false);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const { messages, setMessages, sendMessage } =
@@ -96,6 +101,18 @@ export default function Home({ isMenuOpen }: { isMenuOpen: boolean }) {
     inputRef.current?.focus();
   };
 
+  console.log({ searchValue });
+  const onSetSearchValue = (e: React.ChangeEvent<HTMLInputElement>) =>
+    setSearchValue(e.target.value);
+
+  const handlSearchInputKeyDown = (
+    event: React.KeyboardEvent<HTMLInputElement>
+  ) => {
+    if (event.key === "Escape") {
+      toggleSingleConversationMode();
+    }
+  };
+
   return (
     <div className="flex-row flex flex-grow overflow-y-hidden relative">
       <ConversationsMenu isMenuOpen={isMenuOpen} />
@@ -107,6 +124,10 @@ export default function Home({ isMenuOpen }: { isMenuOpen: boolean }) {
               placeholder="Search conversation..."
               className="w-full px-3 py-1 rounded border focus:outline-none focus:border-blue-500"
               autoFocus
+              onKeyDown={handlSearchInputKeyDown}
+              onChange={onSetSearchValue}
+              autoCorrect="false"
+              autoCapitalize="false"
             />
           </div>
         )}
