@@ -27,15 +27,12 @@ const Toolbar = () => {
   }, []);
 
   const removeConversation = async () => {
-    console.log("removing...");
-
     // Creates a confirmation Ok/Cancel dialog
     const confirmation = await confirm(
       "Are you sure you want to delete this conversation?",
       { title: "Delete Conversation?", kind: "warning" }
     );
 
-    // Prints boolean to the console
     if (confirmation) {
       deleteActiveConversation();
     }
