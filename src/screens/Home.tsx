@@ -110,6 +110,9 @@ export default function Home({ isMenuOpen }: { isMenuOpen: boolean }) {
   ) => {
     if (event.key === "Escape") {
       toggleSingleConversationMode();
+    } else if (event.key === "Enter") {
+      // @ts-ignore Find exists in Safari Webview
+      window?.find(searchValue);
     }
   };
 
