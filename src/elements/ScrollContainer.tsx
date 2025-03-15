@@ -69,7 +69,7 @@ export default function ScrollContainer({
   return (
     <div
       ref={containerRef}
-      className={`overflow-y-scroll h-full scroll-smooth ${className}`}
+      className={`overflow-y-scroll h-full scroll-smooth w-full ${className}`}
     >
       {children}
     </div>

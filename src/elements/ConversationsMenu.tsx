@@ -1,17 +1,11 @@
 import { useConversationStore } from "../store/conversationStore";
 import { useShallow } from "zustand/shallow";
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { listen } from "@tauri-apps/api/event";
 import clsx from "clsx";
+import SearchBox from "./SearchBox";
 
-interface ConversationsMenuProps {
-  isMenuOpen: boolean;
-}
-
-
-export default function ConversationsMenu({
-  isMenuOpen,
-}: ConversationsMenuProps) {
+export default function ConversationsMenu() {
   const {
     conversations,
     setActiveConversationId,
@@ -26,14 +20,36 @@ export default function ConversationsMenu({
     }))
   );
 
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isScrolling, setIsScrolling] = useState(false);
+  const scrollTimerRef = useRef<number>();
+  const searchConversationsRef = useRef<HTMLInputElement>(null);
+
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    setIsScrolling(true);
+    if (scrollTimerRef?.current) clearTimeout(scrollTimerRef.current);
+
+    scrollTimerRef.current = setTimeout(() => {
+      setIsScrolling(false);
+    }, 2000);
+  };
+
   useEffect(() => {
-    const unlisten = listen('new-conversation', () => {
+    const unlistenAdd = listen("new-conversation", () => {
       addConversation();
     });
+    const unlistenFindAll = listen("find-all", () => {
+      focusSearchAll();
+    });
     return () => {
-      unlisten.then(unlistenFn => unlistenFn())
-    }
-  }, [])
+      unlistenAdd.then((unlistenFn) => unlistenFn());
+      unlistenFindAll.then((unlistenFn) => unlistenFn());
+    };
+  }, []);
+
+  const focusSearchAll = () => {
+    searchConversationsRef.current?.focus();
+  };
 
   useEffect(() => {
     if (conversations.length === 0) {
@@ -45,25 +61,57 @@ export default function ConversationsMenu({
     setActiveConversationId(id);
   };
 
+  const filteredConversations =
+    searchQuery.length > 2
+      ? conversations.filter((convo) =>
+          convo.messages
+            .map((m) => m.content.toLowerCase())
+            .join("")
+            .includes(searchQuery.toLowerCase())
+        )
+      : conversations;
+
+  console.log({ filteredConversations });
   return (
     <div
-      className={
-        clsx(`z-10 bg-white shadow-lg overflow-y-scroll max-w-[280px]`, { "h-full w-full": isMenuOpen, "w-0 h-0": !isMenuOpen })
-      }
+      className={clsx(
+        `z-10 bg-gray-100 overflow-y-scroll max-w-[280px]`,
+        "h-full w-full",
+        {
+          "scrollbar-hide": !isScrolling,
+        }
+      )}
+      onScroll={handleScroll}
     >
-      {conversations
-        .map((convo, index) => (
-          <button
-            key={index}
-            onClick={() => onConversationClick(convo.id)}
-            className={
-              clsx(`w-full p-3 text-left border-b flex items-center gap-2 rounded-sm`, { "bg-blue-500 text-white": convo.id === activeConversationId })
-            }
-          >
-            <div className="flex-grow">{convo.summary}</div>
-          </button>
-        ))
-        .reverse()}
+      <div className="sticky top-[0px] p-2 px-3 z-10 bg-gray-100">
+        <SearchBox
+          placeholder="Search conversations..."
+          value={searchQuery}
+          onChange={setSearchQuery}
+          ref={searchConversationsRef}
+        />
+      </div>
+      <div className="shadow-sm">
+        {filteredConversations
+          .map((convo, index) => (
+            <div className={`w-full px-3 mb-3`}>
+              <button
+                key={index}
+                onClick={() => onConversationClick(convo.id)}
+                className={clsx(
+                  `w-full rounded p-3 text-left flex items-center gap-2`,
+                  {
+                    "bg-blue-500 text-white": convo.id === activeConversationId,
+                    "bg-white": convo.id !== activeConversationId,
+                  }
+                )}
+              >
+                <div className="flex-grow">{convo.summary}</div>
+              </button>
+            </div>
+          ))
+          .reverse()}
+      </div>
     </div>
   );
 }

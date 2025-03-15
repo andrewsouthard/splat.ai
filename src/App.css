@@ -2,13 +2,41 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Set these so we can hide the scrollbar when not scrolling conversations.
+   All of them must be set so the scrollbar will appear. */
+::-webkit-scrollbar {
+  width: 6px;
+  position: absolute;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
 /* Match MacOS font size */
 html {
   font-size: 14px;
 }
+.katex-html {
+  font-size: 14px;
+}
+.katex-html > .base {
+  font-size: 16px;
+}
 
 /* Match MacOS cursor behavior */
-a, button {
+a,
+button {
   cursor: default;
   user-select: none;
 }
@@ -26,52 +54,61 @@ a, button {
   overflow: hidden;
   border-right: 2px solid #000;
   white-space: nowrap;
-  animation: typing 6s steps(60, end),
-             blink-caret 0.75s step-end infinite;
+  animation: typing 6s steps(60, end), blink-caret 0.75s step-end infinite;
 }
 
 @keyframes typing {
-  from { width: 0 }
-  to { width: 100% }
+  from {
+    width: 0;
+  }
+  to {
+    width: 100%;
+  }
 }
 
 @keyframes blink-caret {
-  from, to { border-color: transparent }
-  50% { border-color: #000 }
+  from,
+  to {
+    border-color: transparent;
+  }
+  50% {
+    border-color: #000;
+  }
 }
 
 .typewriter.typing:last-child {
   border-right: 2px solid black;
-  animation: typing 10s steps(100, end),
-             blink-caret 0.75s step-end infinite;
+  animation: typing 10s steps(100, end), blink-caret 0.75s step-end infinite;
 }
 
 .animate-dot {
-    animation: dot-blink 1s infinite;
+  animation: dot-blink 1s infinite;
 }
 
 @keyframes dot-blink {
-    0%, 20% {
-        opacity: 0.2;
-    }
-    50% {
-        opacity: 1;
-    }
-    80%, 100% {
-        opacity: 0.2;
-    }
+  0%,
+  20% {
+    opacity: 0.2;
+  }
+  50% {
+    opacity: 1;
+  }
+  80%,
+  100% {
+    opacity: 0.2;
+  }
 }
 
 .animate-dot1 {
-    @apply animate-[dot-blink_1s_infinite];
+  @apply animate-[dot-blink_1s_infinite];
 }
 
 .animate-dot2 {
-    @apply animate-[dot-blink_1s_infinite_0.2s];
+  @apply animate-[dot-blink_1s_infinite_0.2s];
 }
 
 .animate-dot3 {
-    @apply animate-[dot-blink_1s_infinite_0.4s];
+  @apply animate-[dot-blink_1s_infinite_0.4s];
 }
 
 @layer base {

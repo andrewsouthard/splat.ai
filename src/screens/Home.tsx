@@ -10,8 +10,10 @@ import InputArea from "@/elements/InputArea";
 import { useStreamingChatApi } from "@/hooks/useApi";
 import useGlobalShortcut from "@/hooks/useGlobalShortcut";
 import { useSettingsStore } from "@/store/settingsStore";
+import Toolbar from "@/elements/Toolbar";
+import SearchBox from "@/elements/SearchBox";
 
-export default function Home({ isMenuOpen }: { isMenuOpen: boolean }) {
+export default function Home() {
   const [
     conversations,
     activeConversationId,
@@ -27,18 +29,18 @@ export default function Home({ isMenuOpen }: { isMenuOpen: boolean }) {
       state.updateConversationSummary,
     ])
   );
-  const [searchConversationMode, toggleSingleConversationMode] =
-    useSettingsStore(
-      useShallow((state) => [
-        state.searchConversationMode,
-        state.toggleSingleConversationMode,
-      ])
-    );
+  const [isSearchingConversation, toggleSearchConversation] = useSettingsStore(
+    useShallow((state) => [
+      state.isSearchingConversation,
+      state.toggleSearchConversation,
+    ])
+  );
   const debouncedSetMessages = debounce(setConversationMessages);
   const [isLoading, setIsLoading] = useState(false);
   const [searchValue, setSearchValue] = useState<string>();
   const keepStreamingRef = useRef(false);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const searchRef = useRef<HTMLInputElement>(null);
   const { messages, setMessages, sendMessage } =
     useStreamingChatApi(keepStreamingRef);
   useGlobalShortcut();
@@ -101,48 +103,44 @@ export default function Home({ isMenuOpen }: { isMenuOpen: boolean }) {
     inputRef.current?.focus();
   };
 
-  console.log({ searchValue });
-  const onSetSearchValue = (e: React.ChangeEvent<HTMLInputElement>) =>
-    setSearchValue(e.target.value);
-
-  const handlSearchInputKeyDown = (
+  const handleSearchInputKeyDown = (
     event: React.KeyboardEvent<HTMLInputElement>
   ) => {
     if (event.key === "Escape") {
-      toggleSingleConversationMode();
+      toggleSearchConversation();
     } else if (event.key === "Enter") {
       // @ts-ignore Find exists in Safari Webview
       window?.find(searchValue);
+      searchRef.current?.focus();
     }
   };
 
   return (
     <div className="flex-row flex flex-grow overflow-y-hidden relative">
-      <ConversationsMenu isMenuOpen={isMenuOpen} />
-      <div className="flex flex-col overflow-y-hidden mt-1 w-full relative">
-        {searchConversationMode == "single" && (
-          <div className="p-2 bg-gray-50 border-b absolute top-0 left-0 right-0">
-            <input
-              type="text"
+      <ConversationsMenu />
+      <div className="flex flex-col overflow-y-hidden w-full relative">
+        <Toolbar />
+        {isSearchingConversation && (
+          <div className="px-4 pb-2">
+            <SearchBox
+              onKeyDown={handleSearchInputKeyDown}
+              onChange={setSearchValue}
               placeholder="Search conversation..."
-              className="w-full px-3 py-1 rounded border focus:outline-none focus:border-blue-500"
-              autoFocus
-              onKeyDown={handlSearchInputKeyDown}
-              onChange={onSetSearchValue}
-              autoCorrect="false"
-              autoCapitalize="false"
+              value={searchValue || ""}
+              onClear={toggleSearchConversation}
+              ref={searchRef}
             />
           </div>
         )}
         <ScrollContainer
           messages={messages}
-          className="mt-auto p-4 space-y-4 flex-col"
+          className="bg-white mt-auto py-4 px-6 space-y-4 flex-col"
         >
           {messages.map((msg, index) => (
             <ChatMessage key={index} message={msg} />
           ))}
           {isLoading && messages[messages.length - 1]?.role === "user" && (
-            <div className="relative flex items-center p-4 w-fit rounded-xl bg-white">
+            <div className="relative flex items-center p-4 w-fit rounded-xl bg-gray-100">
               <span className="w-2 h-2 mr-1 rounded-full bg-gray-800 animate-dot1"></span>
               <span className="w-2 h-2 mr-1 rounded-full bg-gray-800 animate-dot2"></span>
               <span className="w-2 h-2 mx-0 rounded-full bg-gray-800 animate-dot3"></span>
