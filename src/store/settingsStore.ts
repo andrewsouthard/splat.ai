@@ -6,10 +6,12 @@ interface SettingsState {
     globalShortcut: string;
     selectedModel: string;
     availableModels: string[];
+    isSearchingConversation: boolean;
     setApiUrl: (url: string) => void;
     setGlobalShortcut: (shortcut: string) => void;
     setSelectedModel: (model: string) => void;
     setAvailableModels: (models: string[]) => void;
+    toggleSearchConversation: () => void;
 }
 
 export const useSettingsStore = create<SettingsState>()(
@@ -19,14 +21,17 @@ export const useSettingsStore = create<SettingsState>()(
             globalShortcut: "None",
             selectedModel: "",
             availableModels: [],
+            searchConversationMode: "none",
             setApiUrl: (url: string) => set({ apiUrl: url }),
             setGlobalShortcut: (shortcut: string) => set({ globalShortcut: shortcut }),
             setSelectedModel: (model: string) => set({ selectedModel: model }),
             setAvailableModels: (models: string[]) => set({ availableModels: models }),
-        }),
-        {
-            name: 'settings-storage',
-            storage: createJSONStorage(() => window.localStorage),
-        }
+            toggleSearchConversation: () => set((state) => ({
+                isSearchingConversation: !state.isSearchingConversation
+            }))
+        }), {
+        name: 'settings-storage',
+        storage: createJSONStorage(() => window.localStorage),
+    }
     )
 );

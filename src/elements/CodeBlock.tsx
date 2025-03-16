@@ -11,7 +11,11 @@ interface CodeBlockProps {
   children?: React.ReactNode;
 }
 
-export default function CodeBlock({ inline, className, children }: CodeBlockProps) {
+export default function CodeBlock({
+  inline,
+  className,
+  children,
+}: CodeBlockProps) {
   const [highlighted, setHighlighted] = useState("<span />");
   const [copied, setCopied] = useState(false);
   const numLines = String(children).split("\n").length;
@@ -26,7 +30,7 @@ export default function CodeBlock({ inline, className, children }: CodeBlockProp
         themes: {
           dark: "one-dark-pro",
           light: "github-light",
-        }
+        },
       });
       setHighlighted(highlightedCode);
     }
@@ -47,12 +51,13 @@ export default function CodeBlock({ inline, className, children }: CodeBlockProp
         {numLines >= 3 ? (
           <button
             onClick={copyToClipboard}
-            className={clsx(`mt-1 flex ml-auto items-center justify-end gap-2 p-1 text-white text-sm text-sans rounded-t`,
+            className={clsx(
+              `mt-1 flex ml-auto items-center justify-end gap-2 p-1 text-white text-sm text-sans rounded-t`,
               {
-                'bg-blue-500': copied,
-                'bg-blue-400 hover:bg-blue-300': !copied
-              })
-            }
+                "bg-blue-500": copied,
+                "bg-blue-400 hover:bg-blue-300": !copied,
+              }
+            )}
             title="Copy to clipboard"
           >
             {copied ? (
@@ -60,15 +65,13 @@ export default function CodeBlock({ inline, className, children }: CodeBlockProp
             ) : (
               <Clipboard className="h-4 w-4" />
             )}
-            <span>{copied ? 'Copied!' : 'Copy'}</span>
+            <span>{copied ? "Copied!" : "Copy"}</span>
           </button>
         ) : (
           <div className="mt-4" />
-        )
-        }
+        )}
         <div dangerouslySetInnerHTML={{ __html: highlighted }} />
-      </div >
+      </div>
     );
   }
-};
-
+}

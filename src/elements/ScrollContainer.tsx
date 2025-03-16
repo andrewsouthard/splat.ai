@@ -24,7 +24,7 @@ export default function ScrollContainer({
         setTimeout(() => {
           containerRef.current?.scrollTo({
             top: containerRef.current.scrollHeight,
-            behavior: 'instant'
+            behavior: "instant",
           });
         }, 50);
       });
@@ -32,8 +32,7 @@ export default function ScrollContainer({
   });
 
   useEffect(() => {
-    if (shouldAutoScroll)
-      scrollToBottom();
+    if (shouldAutoScroll) scrollToBottom();
   }, [messages, containerRef.current?.scrollHeight]);
 
   useEffect(() => {
@@ -44,8 +43,8 @@ export default function ScrollContainer({
         const container = e.currentTarget as HTMLElement;
         const isAtBottom =
           container.scrollHeight -
-          container.scrollTop -
-          container.clientHeight <
+            container.scrollTop -
+            container.clientHeight <
           10;
 
         if (isAtBottom) {
@@ -68,7 +67,10 @@ export default function ScrollContainer({
   }, []);
 
   return (
-    <div ref={containerRef} className={`overflow-y-scroll h-full scroll-smooth ${className}`}>
+    <div
+      ref={containerRef}
+      className={`overflow-y-scroll h-full scroll-smooth w-full ${className}`}
+    >
       {children}
     </div>
   );
