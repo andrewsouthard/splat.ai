@@ -24,11 +24,12 @@
       {
         "label": "preferences",
         "url": "preferences.html",
-        "width": 400,
-        "height": 400,
-        "resizable": false,
+        "title": "Settings",
+        "width": 600,
+        "height": 600,
+        "resizable": true,
         "visible": false,
-        "alwaysOnTop": true
+        "alwaysOnTop": false
       }
     ],
     "security": {

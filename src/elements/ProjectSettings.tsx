@@ -41,17 +41,16 @@ export default function ProjectSettings() {
 
   const selectedProject = projects.find((p) => p.id === selectedProjectId);
 
-  const onAddProject = async () => {
-    const newIdx = projects.length;
-    await addProject({
-      name: `New Project`,
-      model: availableModels[0],
-      contextLength: 8184,
-      systemPrompt: "",
-    });
-    setTimeout(() => {});
-    setSelectedProjectId(projects[newIdx].id);
-  };
+  const onAddProject = async () =>
+    addProject(
+      {
+        name: `New Project`,
+        model: availableModels[0],
+        contextLength: 8184,
+        systemPrompt: "",
+      },
+      (id) => setSelectedProjectId(id)
+    );
 
   console.log({ selectedProject });
   const onDeleteProject = () => {
@@ -65,113 +64,122 @@ export default function ProjectSettings() {
 
   return (
     <SidebarProvider open={true}>
-      <Sidebar
-        variant="sidebar"
-        collapsible={projects.length > 0 ? "none" : "offcanvas"}
-      >
-        <SidebarContent>
-          <SidebarGroup>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {projects.map((project) => (
-                  <SidebarMenuItem key={project.id}>
-                    <SidebarMenuButton
-                      asChild
-                      isActive={project.id === selectedProjectId}
-                      onClick={() => setSelectedProjectId(project.id)}
-                    >
-                      <span>{project.name}</span>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        </SidebarContent>
-        <SidebarFooter className="flex-row flex">
-          <Button variant="outline" onClick={onAddProject}>
-            <Plus />
-          </Button>
-          <Button
-            variant="outline"
-            onClick={onDeleteProject}
-            disabled={!selectedProjectId}
-          >
-            <Minus />
-          </Button>
-        </SidebarFooter>
-      </Sidebar>
-
-      <div className="flex-1">
-        {!selectedProject ? (
-          <div className="p-4">
-            <Button variant="default" onClick={onAddProject}>
-              <Plus /> Add Project
-            </Button>
-          </div>
-        ) : (
-          <div className="p-4 space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Project Name</Label>
-              <Input
-                id="name"
-                value={selectedProject.name}
-                onChange={(e) =>
-                  updateProject(selectedProject.id, { name: e.target.value })
-                }
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="model">Model</Label>
-              <Select
-                value={selectedProject.model}
-                onValueChange={(value) =>
-                  updateProject(selectedProject.id, { model: value })
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select model" />
-                </SelectTrigger>
-                <SelectContent>
-                  {availableModels.map((model) => (
-                    <SelectItem key={model} value={model}>
-                      {model}
-                    </SelectItem>
+      <div className="flex max-h-[500px] w-full">
+        <Sidebar
+          variant="sidebar"
+          collapsible={projects.length > 0 ? "none" : "offcanvas"}
+        >
+          <SidebarContent>
+            <SidebarGroup>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {projects.map((project) => (
+                    <SidebarMenuItem key={project.id}>
+                      <SidebarMenuButton
+                        asChild
+                        isActive={project.id === selectedProjectId}
+                        onClick={() => setSelectedProjectId(project.id)}
+                      >
+                        <span>{project.name}</span>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
                   ))}
-                </SelectContent>
-              </Select>
-            </div>
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          </SidebarContent>
+          <SidebarFooter className="flex-row flex">
+            <Button variant="outline" onClick={onAddProject}>
+              <Plus />
+            </Button>
+            <Button
+              variant="outline"
+              onClick={onDeleteProject}
+              disabled={!selectedProjectId}
+            >
+              <Minus />
+            </Button>
+          </SidebarFooter>
+        </Sidebar>
 
-            <div className="space-y-2">
-              <Label htmlFor="contextLength">Context Length</Label>
-              <Input
-                id="contextLength"
-                type="number"
-                value={selectedProject.contextLength}
-                onChange={(e) =>
-                  updateProject(selectedProject.id, {
-                    contextLength: parseInt(e.target.value),
-                  })
-                }
-              />
+        <div className="flex-1 h-full w-full">
+          {!selectedProject ? (
+            <div className="p-4">
+              <Button variant="default" onClick={onAddProject}>
+                <Plus /> Add Project
+              </Button>
             </div>
+          ) : (
+            <div className="px-4 pb-4 space-y-4 w-full">
+              <div className="space-y-1 mb-1">
+                <Label htmlFor="name">Project Name</Label>
+                <Input
+                  className="bg-white w-full"
+                  id="name"
+                  value={selectedProject.name}
+                  onChange={(e) =>
+                    updateProject(selectedProject.id, { name: e.target.value })
+                  }
+                />
+              </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="systemPrompt">System Prompt</Label>
-              <Textarea
-                id="systemPrompt"
-                value={selectedProject.systemPrompt}
-                onChange={(e) =>
-                  updateProject(selectedProject.id, {
-                    systemPrompt: e.target.value,
-                  })
-                }
-                rows={4}
-              />
+              <div className="space-y-1 mb-1">
+                <Label htmlFor="model">Model</Label>
+                <Select
+                  value={selectedProject.model}
+                  onValueChange={(value) =>
+                    updateProject(selectedProject.id, { model: value })
+                  }
+                >
+                  <SelectTrigger className="bg-white">
+                    <SelectValue placeholder="Select model" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availableModels.map((model) => (
+                      <SelectItem
+                        key={model}
+                        value={model}
+                        className="bg-white"
+                      >
+                        {model}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-1 mb-1">
+                <Label htmlFor="contextLength">Context Length</Label>
+                <Input
+                  id="contextLength"
+                  className="bg-white"
+                  type="number"
+                  value={selectedProject.contextLength}
+                  onChange={(e) =>
+                    updateProject(selectedProject.id, {
+                      contextLength: parseInt(e.target.value),
+                    })
+                  }
+                />
+              </div>
+
+              <div className="space-y-1">
+                <Label htmlFor="systemPrompt">System Prompt</Label>
+                <Textarea
+                  id="systemPrompt"
+                  value={selectedProject.systemPrompt}
+                  className="bg-white"
+                  onChange={(e) =>
+                    updateProject(selectedProject.id, {
+                      systemPrompt: e.target.value,
+                    })
+                  }
+                  rows={4}
+                />
+              </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </SidebarProvider>
   );

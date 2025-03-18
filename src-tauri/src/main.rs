@@ -41,7 +41,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                         .build()
                         .unwrap();
                         window
-                            .set_size(tauri::LogicalSize::new(400.0, 400.0))
+                            .set_size(tauri::LogicalSize::new(600.0, 600.0))
                             .unwrap();
 
                         app_handle

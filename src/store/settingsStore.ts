@@ -21,7 +21,7 @@ export const useSettingsStore = create<SettingsState>()(
             globalShortcut: "None",
             selectedModel: "",
             availableModels: [],
-            searchConversationMode: "none",
+            isSearchingConversation: false,
             setApiUrl: (url: string) => set({ apiUrl: url }),
             setGlobalShortcut: (shortcut: string) => set({ globalShortcut: shortcut }),
             setSelectedModel: (model: string) => set({ selectedModel: model }),

@@ -95,12 +95,10 @@ export default function Settings() {
         defaultValue="general"
         className="w-full flex flex-col items-center"
       >
-        {/* 
-               Add back once we implement projects 
-                <TabsList className="w-fit-content mb-4">
-                    <TabsTrigger value="general">General</TabsTrigger>
-                    <TabsTrigger value="projects">Projects</TabsTrigger>
-                </TabsList> */}
+        <TabsList className="w-fit-content mb-4">
+          <TabsTrigger value="general">General</TabsTrigger>
+          <TabsTrigger value="projects">Projects</TabsTrigger>
+        </TabsList>
         <TabsContent value="general" className="w-full flex flex-col px-8">
           <div className="w-fit-content">
             <Label className="font-bold" htmlFor="new-model-input">
