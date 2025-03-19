@@ -71,7 +71,6 @@ export default function ConversationsMenu() {
         )
       : conversations;
 
-  console.log({ filteredConversations });
   return (
     <div
       className={clsx(

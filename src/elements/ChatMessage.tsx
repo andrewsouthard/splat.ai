@@ -52,6 +52,7 @@ const processMathContent = (content: string) => {
 };
 
 export default function ChatMessage({ message }: ChatMessageProps) {
+  if (message.role === "system") return null;
   return (
     <TooltipProvider>
       <Tooltip>

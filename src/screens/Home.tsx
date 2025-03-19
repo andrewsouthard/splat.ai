@@ -1,11 +1,11 @@
-import { useState, useRef, useEffect, SetStateAction } from "react";
+import { useState, useRef, useEffect } from "react";
 import ScrollContainer from "@/elements/ScrollContainer";
 import ChatMessage from "@/elements/ChatMessage";
 import { useConversationStore } from "@/store/conversationStore";
 import { Message } from "@/types";
 import { useShallow } from "zustand/react/shallow";
 import ConversationsMenu from "@/elements/ConversationsMenu";
-import { debounce } from "lodash-es";
+import { throttle } from "lodash-es";
 import InputArea from "@/elements/InputArea";
 import { useStreamingChatApi } from "@/hooks/useApi";
 import useGlobalShortcut from "@/hooks/useGlobalShortcut";
@@ -35,7 +35,7 @@ export default function Home() {
       state.toggleSearchConversation,
     ])
   );
-  const debouncedSetMessages = debounce(setConversationMessages);
+  const debouncedSetMessages = throttle(setConversationMessages, 500);
   const [isLoading, setIsLoading] = useState(false);
   const [searchValue, setSearchValue] = useState<string>();
   const keepStreamingRef = useRef(false);

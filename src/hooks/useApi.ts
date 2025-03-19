@@ -1,3 +1,4 @@
+import { useProjectStore } from "@/store/projectStore";
 import { useSettingsStore } from "@/store/settingsStore";
 import { Message } from "@/types";
 import { MutableRefObject, useEffect, useRef, useState } from "react";
@@ -88,6 +89,7 @@ export function useStreamingModelPullApi(abortControllerRef: MutableRefObject<Ab
 export function useStreamingChatApi(keepStreamingRef: any) {
     const abortControllerRef = useRef<AbortController | null>(null);
     const [messages, setMessages] = useState<Message[]>([]);
+    const { projects, selectedProjectId } = useProjectStore();
     const { selectedModel, apiUrl } = useSettingsStore(
         useShallow((state) => ({
             selectedModel: state.selectedModel,
@@ -107,8 +109,25 @@ export function useStreamingChatApi(keepStreamingRef: any) {
         const assistantMessageId = crypto.randomUUID();
         abortControllerRef.current = new AbortController();
         keepStreamingRef.current = true;
+        let selectedProject;
+        if (selectedProjectId) {
+            selectedProject = projects.find(p => p.id === selectedProjectId)
+        }
 
         const newMessages = [...messages, newMessage];
+        // Add the system message if this is the first message and one is set.
+        if (selectedProject?.systemPrompt && selectedProject.systemPrompt.length > 1 && newMessages.length === 1) {
+            newMessages.unshift({
+                id: crypto.randomUUID(),
+                content: selectedProject.systemPrompt,
+                role: "system",
+                complete: true,
+                timestamp: new Date()
+            })
+        }
+        const model = selectedProject?.model || selectedModel;
+        const options = selectedProject?.contextLength ? { num_ctx: selectedProject.contextLength } : {}
+
         setMessages(newMessages);
 
         try {
@@ -119,8 +138,9 @@ export function useStreamingChatApi(keepStreamingRef: any) {
                 },
                 signal: abortControllerRef.current.signal,
                 body: JSON.stringify({
-                    model: selectedModel,
+                    model,
                     messages: newMessages,
+                    options,
                 }),
             });
 
