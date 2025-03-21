@@ -34,7 +34,6 @@ xattr -dr com.apple.quarantine <path_to_app>
 
 Replace `<path_to_app>` with the path to the downloaded app.
 
-
 4. Install the app and start chatting!
 
 ## Development
@@ -43,24 +42,17 @@ Replace `<path_to_app>` with the path to the downloaded app.
 
 We suggest using [rustup](https://rustup.rs/) to install Rust and [nvm](https://github.com/nvm-sh/nvm) to install Node.js.
 
-2. Install yarn
+2. Install dependencies
 
 ```bash
-npm install --global yarn
+npm install
 ```
 
-3. Install dependencies
-
-```bash
-yarn install
-```
-
-4. Run the app
+3. Run the app
 
 ```
-yarn run tauri dev
+npx tauri dev
 ```
-
 
 ## Releasing
 
@@ -68,3 +60,4 @@ Releases are done through Github Actions. To prepare for a release, first bump t
 
 ```bash
 npx tauri-version@latest patch
+```

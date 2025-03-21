@@ -7,9 +7,16 @@ use tauri::Manager;
 use tauri::{AppHandle, Wry};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    env_logger::init();
+    // env_logger::init();
 
     tauri::Builder::default()
+        .plugin(
+            tauri_plugin_log::Builder::new()
+                .target(tauri_plugin_log::Target::new(
+                    tauri_plugin_log::TargetKind::Stdout,
+                ))
+                .build(),
+        )
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_clipboard_manager::init())
@@ -41,7 +48,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                         .build()
                         .unwrap();
                         window
-                            .set_size(tauri::LogicalSize::new(400.0, 400.0))
+                            .set_size(tauri::LogicalSize::new(600.0, 600.0))
                             .unwrap();
 
                         app_handle

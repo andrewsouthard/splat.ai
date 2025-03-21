@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useSettingsStore } from "../store/settingsStore";
 import { useConversationStore } from "../store/conversationStore";
 import { useShallow } from "zustand/react/shallow";
+import { confirm } from "@tauri-apps/plugin-dialog";
 import { open } from "@tauri-apps/plugin-shell";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -57,9 +58,16 @@ export default function Settings() {
     }
   }, [availableModels]);
 
-  const clearConversations = () => {
-    setConversations([]);
-    addConversation();
+  const clearConversations = async () => {
+    const confirmation = await confirm(
+      "Are you sure you want to delete all conversations?",
+      { title: "Delete ALL Conversations?", kind: "warning" }
+    );
+
+    if (confirmation) {
+      setConversations([]);
+      addConversation();
+    }
   };
 
   const onPullModel = async () => {
@@ -95,12 +103,10 @@ export default function Settings() {
         defaultValue="general"
         className="w-full flex flex-col items-center"
       >
-        {/* 
-               Add back once we implement projects 
-                <TabsList className="w-fit-content mb-4">
-                    <TabsTrigger value="general">General</TabsTrigger>
-                    <TabsTrigger value="projects">Projects</TabsTrigger>
-                </TabsList> */}
+        <TabsList className="w-fit-content mb-4">
+          <TabsTrigger value="general">General</TabsTrigger>
+          <TabsTrigger value="projects">Projects</TabsTrigger>
+        </TabsList>
         <TabsContent value="general" className="w-full flex flex-col px-8">
           <div className="w-fit-content">
             <Label className="font-bold" htmlFor="new-model-input">
