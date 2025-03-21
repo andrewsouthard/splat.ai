@@ -1,5 +1,7 @@
 import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
+import { createBroadcastMiddleware } from './broadcastMiddleware';
+
 
 interface Project {
     id: string
@@ -18,8 +20,12 @@ interface ProjectStore {
     selectProject: (id: string) => void
 }
 
+const broadcastMiddleware = createBroadcastMiddleware({
+    channelName: 'project-channel'
+});
+
 export const useProjectStore = create<ProjectStore>(
-    persist(
+    broadcastMiddleware(persist(
         (set) => ({
             projects: [],
             selectedProjectId: null,
@@ -44,5 +50,5 @@ export const useProjectStore = create<ProjectStore>(
         {
             name: 'projects-storage',
             storage: createJSONStorage(() => window.localStorage),
-        })
+        }))
 );

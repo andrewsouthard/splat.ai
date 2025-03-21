@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import { Message } from '../types';
+import { createBroadcastMiddleware } from './broadcastMiddleware';
 
 interface Conversation {
     id: string;
@@ -27,15 +28,18 @@ const getBlankConversation = () => ({
     summary: "New Conversation",
 });
 
+const broadcastMiddleware = createBroadcastMiddleware({
+    channelName: 'conversations-channel'
+});
 
 export const useConversationStore = create<ConversationStore>()(
-    persist(
+    broadcastMiddleware(persist(
         (set, get) => ({
             conversations: [],
             activeConversationId: null,
             addConversation: () => {
-                // Don't do anything if this conversation is empty
-                if (get().conversationMessages().length === 0) return;
+                // Don't do anything if this conversation is empty unless there are no other conversations
+                if (get().conversationMessages().length === 0 && get().conversations.length > 0) return;
                 const newConvo = getBlankConversation();
                 set((state) => ({
                     conversations: [...state.conversations, newConvo],
@@ -79,4 +83,4 @@ export const useConversationStore = create<ConversationStore>()(
             storage: createJSONStorage(() => window.localStorage),
         }
     )
-);
+    ));

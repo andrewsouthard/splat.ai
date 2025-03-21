@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware'
+import { createBroadcastMiddleware } from './broadcastMiddleware';
 
 interface SettingsState {
     apiUrl: string;
@@ -14,8 +15,11 @@ interface SettingsState {
     toggleSearchConversation: () => void;
 }
 
+const broadcastMiddleware = createBroadcastMiddleware({
+    channelName: 'settings-channel'
+});
 export const useSettingsStore = create<SettingsState>()(
-    persist(
+    broadcastMiddleware(persist(
         (set) => ({
             apiUrl: "http://localhost:11434",
             globalShortcut: "None",
@@ -33,5 +37,5 @@ export const useSettingsStore = create<SettingsState>()(
         name: 'settings-storage',
         storage: createJSONStorage(() => window.localStorage),
     }
-    )
+    ))
 );

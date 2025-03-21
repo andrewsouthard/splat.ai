@@ -93,9 +93,8 @@ export default function ConversationsMenu() {
       <div className="shadow-sm">
         {filteredConversations
           .map((convo, index) => (
-            <div className={`w-full px-3 mb-3`}>
+            <div className={`w-full px-3 mb-3`} key={`${index}`}>
               <button
-                key={index}
                 onClick={() => onConversationClick(convo.id)}
                 className={clsx(
                   `w-full rounded p-3 text-left flex items-center gap-2`,
