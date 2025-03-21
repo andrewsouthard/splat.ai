@@ -5,7 +5,6 @@ import { useConversationStore } from "@/store/conversationStore";
 import { Message } from "@/types";
 import { useShallow } from "zustand/react/shallow";
 import ConversationsMenu from "@/elements/ConversationsMenu";
-import { throttle } from "lodash-es";
 import InputArea from "@/elements/InputArea";
 import { useStreamingChatApi } from "@/hooks/useApi";
 import useGlobalShortcut from "@/hooks/useGlobalShortcut";
@@ -35,7 +34,6 @@ export default function Home() {
       state.toggleSearchConversation,
     ])
   );
-  const debouncedSetMessages = throttle(setConversationMessages, 500);
   const [isLoading, setIsLoading] = useState(false);
   const [searchValue, setSearchValue] = useState<string>();
   const keepStreamingRef = useRef(false);
@@ -63,6 +61,13 @@ export default function Home() {
   useEffect(() => {
     debouncedSetMessages(messages);
   }, [messages]);
+
+  const debouncedSetMessages = (messages: Message[]) => {
+    const lastMessageComplete = messages[messages.length - 1]?.complete;
+    if ((messages && messages.length === 0) || lastMessageComplete) {
+      setConversationMessages(messages);
+    }
+  };
 
   const stopResponse = () => {
     keepStreamingRef.current = false;

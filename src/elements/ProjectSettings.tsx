@@ -52,7 +52,6 @@ export default function ProjectSettings() {
       (id) => setSelectedProjectId(id)
     );
 
-  console.log({ selectedProject });
   const onDeleteProject = () => {
     if (!selectedProjectId) return;
     const oldIdx = projects.findIndex((p) => p.id === selectedProjectId);

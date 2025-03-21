@@ -58,15 +58,16 @@ export const useConversationStore = create<ConversationStore>()(
             conversationMessages: () =>
                 get().conversations.find((c) => c.id === get().activeConversationId)
                     ?.messages || [],
-            setConversationMessages: (messages: Message[]) =>
+            setConversationMessages: (messages: Message[]) => {
+                console.log(`setting conversation messages to ${JSON.stringify(messages)}`)
                 set((state) => ({
                     conversations: state.conversations.map((convo) =>
                         convo.id === get().activeConversationId
                             ? { ...convo, messages }
                             : convo
                     ),
-                })
-                ),
+                }))
+            },
             setConversations: (conversations) => {
                 localStorage.setItem('conversations', JSON.stringify(conversations));
                 set({ conversations });

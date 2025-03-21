@@ -19,10 +19,8 @@ export function createBroadcastMiddleware<State extends object>(config: Broadcas
         (set, get, storeApi) => {
             // Set up broadcast channel listener
             channel.onmessage = (event) => {
-                console.log("got broadcast message")
                 const { id, state } = event.data;
                 if (id !== middlewareId) {
-                    console.log(`applying changes from ${id}`)
                     set(deserialize(state));
                 }
             };
@@ -33,7 +31,6 @@ export function createBroadcastMiddleware<State extends object>(config: Broadcas
                     ? args[0](get())
                     : args[0];
 
-                console.log("sending changes via broadcast channel")
                 channel.postMessage({
                     id: middlewareId,
                     state: serialize(newState)
