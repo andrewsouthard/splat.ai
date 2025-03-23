@@ -12,6 +12,12 @@
   "plugins": {
     "@tauri-apps/plugin-store": {
       "open": true
+    },
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDczQkYxNTgzQjBDMTU4NjMKUldSaldNR3dneFcvYzcwanpSSCtCYzdPb3loaVdKNUZYR3l6YlBYdzV2YXVMc1ZpU0RQWVAwNSsK",
+      "endpoints": [
+        "https://github.com/andrewsouthard/splat.ai/releases/latest/download/latest.json"
+      ]
     }
   },
   "app": {
@@ -38,6 +44,7 @@
   },
   "bundle": {
     "active": true,
+    "createUpdaterArtifacts": true,
     "targets": "dmg",
     "icon": [
       "icons/icon.ico",
