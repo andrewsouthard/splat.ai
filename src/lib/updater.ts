@@ -3,7 +3,10 @@ import { check } from '@tauri-apps/plugin-updater';
 import { relaunch } from '@tauri-apps/plugin-process';
 
 export async function checkForUpdates() {
-    const update = await check();
+    const update = await check().catch(e => {
+        console.error(e);
+        return null;
+    });
     if (update) {
         console.log(
             `found update ${update.version} from ${update.date} with notes ${update.body}`

@@ -104,7 +104,9 @@ export default function ConversationsMenu() {
                   }
                 )}
               >
-                <div className="flex-grow">{convo.summary}</div>
+                <div className="flex-grow text-wrap break-words">
+                  {convo.summary}
+                </div>
               </button>
             </div>
           ))
