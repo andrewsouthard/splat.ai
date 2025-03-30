@@ -14,6 +14,7 @@
     "clipboard-manager:allow-write-text",
     "shell:default",
     "dialog:default",
-    "log:default"
+    "log:default",
+    "fs:default"
   ]
 }
