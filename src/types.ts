@@ -4,6 +4,7 @@ export interface Message {
     role: "user" | "assistant" | "system";
     content: string;
     timestamp: Date;
+    images?: string[];
     complete: boolean;
     inputTokens?: number;
     tokens?: number;

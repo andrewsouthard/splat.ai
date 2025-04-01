@@ -1,5 +1,5 @@
 import { useRef, useState, KeyboardEvent, useEffect } from "react";
-import { Bot, Folder, Square } from "lucide-react";
+import { Bot, Folder, Image, Square } from "lucide-react";
 import { useSettingsStore } from "@/store/settingsStore";
 import { useShallow } from "zustand/react/shallow";
 import {
@@ -11,9 +11,11 @@ import {
 } from "@/components/ui/select";
 import { clsx } from "clsx";
 import { useProjectStore } from "@/store/projectStore";
+import { open } from "@tauri-apps/plugin-dialog";
+import { readFile } from "@tauri-apps/plugin-fs";
 
 interface InputAreaProps {
-  sendMessage: (message: string) => void;
+  sendMessage: (message: string, images?: string[]) => void;
   isLoading: boolean;
   stopResponse: () => void;
 }
@@ -29,6 +31,11 @@ interface ChatTarget {
   type: ChatTargetType;
 }
 
+interface MessageAttachment {
+  fileType: string;
+  contents: string;
+}
+
 const bottomButtonClasses =
   "h-8 flex-row flex items-center hover:shadow-sm py-0 rounded hover:bg-gray-100";
 
@@ -40,6 +47,7 @@ export default function InputArea({
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const [inputMessage, setInputMessage] = useState("");
   const [chatTargets, setChatTargets] = useState<ChatTarget[]>([]);
+  const [attachments, setAttachments] = useState<MessageAttachment[]>([]);
   const { projects, selectedProjectId, selectProject } = useProjectStore(
     useShallow((state) => ({
       projects: state.projects,
@@ -68,7 +76,11 @@ export default function InputArea({
 
   const onSendMessage = () => {
     if (!inputMessage.trim()) return;
-    sendMessage(inputMessage);
+    const imagesToSend = attachments
+      .filter((a) => a.fileType === "image")
+      .map((a) => a.contents.split(",")[1]);
+    sendMessage(inputMessage, imagesToSend);
+    setAttachments([]);
     setInputMessage("");
     if (inputRef.current) {
       inputRef.current.style.height = "44px";
@@ -98,6 +110,45 @@ export default function InputArea({
       selectProject(newTarget.value);
       setSelectedModel("");
     }
+  };
+
+  const addImageFromFile = async () => {
+    const file = await open({
+      filters: [
+        {
+          name: "imageFilter",
+          extensions: ["svg", "png", "jpg", "jpeg", "heic"],
+        },
+      ],
+      multiple: false,
+      directory: false,
+    });
+    if (typeof file === "string") {
+      console.log({ file });
+
+      const fileContents = await readFile(file);
+      const img = await uint8ArrayToBase64(fileContents);
+      setAttachments((a) => [...a, { contents: img, fileType: "image" }]);
+    }
+  };
+
+  const uint8ArrayToBase64 = async (arr: Uint8Array) => {
+    const blob = new Blob([arr]);
+
+    return new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        if (reader.result) {
+          resolve(reader.result.toString());
+        } else {
+          reject(new Error("Failed to convert blob to base64"));
+        }
+      };
+      reader.onerror = (error) => {
+        reject(error);
+      };
+      reader.readAsDataURL(blob);
+    });
   };
 
   return (
@@ -145,6 +196,19 @@ export default function InputArea({
             </SelectContent>
           </Select>
         </div>
+        <button
+          onClick={addImageFromFile}
+          className={clsx(bottomButtonClasses, "ml-1", "px-4")}
+          title="Image"
+        >
+          <Image className="ml-1 h-5 w-5 mr-2" />
+        </button>
+        {attachments &&
+          attachments.length > 0 &&
+          attachments.map((a) => {
+            if (a.fileType !== "image") return null;
+            return <img src={`${a.contents}`} className="h-6 w-6" />;
+          })}
         {isLoading && (
           <button
             onClick={stopResponse}
