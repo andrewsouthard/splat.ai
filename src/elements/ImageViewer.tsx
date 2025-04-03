@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import clsx from "clsx";
+import ImageAttachment from "./ImageAttachment";
 
 interface ImageViewerProps {
   image?: string;
@@ -33,10 +34,12 @@ export default function ImageViewer({ image, className }: ImageViewerProps) {
         className={clsx("relative cursor-pointer", className)}
         onClick={() => setIsOverlayOpen(true)}
       >
-        <img
-          src={`data:image/png;base64,${image}`}
-          className="max-w-xs max-h-xs rounded-xl border border-gray-100"
-          alt="Image"
+        <ImageAttachment
+          imageSrc={`data:image/png;base64,${image}`}
+          className="rounded-xl border border-gray-100"
+          maxHeight="200px"
+          maxWidth="200px"
+          showCloseButton={false}
         />
       </div>
 
@@ -51,10 +54,13 @@ export default function ImageViewer({ image, className }: ImageViewerProps) {
           }}
         >
           <div className="relative max-w-4xl max-h-[90vh] overflow-auto flex justify-center">
-            <img
-              src={`data:image/png;base64,${image}`}
-              className="max-w-full max-h-[80vh] object-contain rounded-xl"
-              alt="Image"
+            <ImageAttachment
+              imageSrc={`data:image/png;base64,${image}`}
+              onClose={() => setIsOverlayOpen(false)}
+              className="rounded-xl"
+              maxHeight="80vh"
+              maxWidth="100%"
+              showCloseButton={true}
             />
           </div>
         </div>

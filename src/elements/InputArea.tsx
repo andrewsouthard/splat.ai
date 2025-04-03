@@ -13,6 +13,7 @@ import { clsx } from "clsx";
 import { useProjectStore } from "@/store/projectStore";
 import { open } from "@tauri-apps/plugin-dialog";
 import { readFile } from "@tauri-apps/plugin-fs";
+import ImageAttachment from "./ImageAttachment";
 
 interface InputAreaProps {
   sendMessage: (message: string, images?: string[]) => void;
@@ -100,7 +101,6 @@ export default function InputArea({
     const target = e.target as HTMLTextAreaElement;
     target.style.height = "auto";
     target.style.height = `${target.scrollHeight}px`;
-    onResize();
   };
 
   const onChangeChatTarget = (value: string) => {
@@ -174,20 +174,13 @@ export default function InputArea({
         attachments.map((a) => {
           if (a.fileType !== "image") return null;
           return (
-            <div className="relative w-fit group">
-              <img
-                src={`${a.contents}`}
-                className="max-h-[200px] max-w-[150px]"
-              />
-              <button
-                onClick={() =>
-                  setAttachments(attachments.filter((att) => att !== a))
-                }
-                className="absolute top-1 right-1 p-1 bg-white/80 rounded-full hover:cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
+            <ImageAttachment
+              key={a.contents}
+              imageSrc={a.contents}
+              onClose={() =>
+                setAttachments(attachments.filter((att) => att !== a))
+              }
+            />
           );
         })}
       <div className="flex items-center text-sm">
@@ -207,7 +200,7 @@ export default function InputArea({
                 >
                   <div className="flex flex-row">
                     {chatTarget.type === ChatTargetType.Project ? (
-                      <Blend className="w-5 h-5 -ml-0.5 mr-2 -mt-0.25" />
+                      <Blend className="w-5 h-5 -ml-0.25 mr-2 -mt-0.25" />
                     ) : (
                       <Bot className="h-5 w-5 mr-2 -mt-0.25 -ml-0.5" />
                     )}
