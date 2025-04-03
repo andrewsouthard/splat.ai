@@ -6,6 +6,7 @@ import CodeBlock from "./CodeBlock";
 import clsx from "clsx";
 import { Message } from "@/types";
 import "katex/dist/katex.min.css";
+import ImageViewer from "./ImageViewer";
 
 interface ChatMessageProps {
   message: Message;
@@ -47,34 +48,42 @@ const processMathContent = (content: string) => {
 
 export default function ChatMessage({ message }: ChatMessageProps) {
   if (message.role === "system") return null;
+  const msgContainerClasses = clsx("flex items-start", {
+    "justify-end": message.role === "user",
+    "justify-start": message.role === "assistant",
+  });
   return (
-    <div
-      className={clsx("flex items-start space-x-3", {
-        "justify-end": message.role === "user",
-        "justify-start": message.role === "assistant",
-      })}
-    >
-      <div
-        className={clsx("px-4 py-2 rounded-xl max-w-[100%]", {
-          "bg-blue-500 text-white": message.role === "user",
-          "bg-gray-100 text-gray-800 border": message.role === "assistant",
-        })}
-      >
-        {/* The data-theme attribute is used to set the theme for the Markdown content */}
-        <article
-          className="prose lg:prose-xl"
-          data-theme={message.role === "user" ? "light" : "dark"}
+    <div>
+      <div className={msgContainerClasses}>
+        <div
+          className={clsx("px-4 py-2 rounded-xl max-w-[100%]", {
+            "bg-blue-500 text-white": message.role === "user",
+            "bg-gray-100 text-gray-800 border": message.role === "assistant",
+          })}
         >
-          <Markdown
-            components={{ code: CodeBlock }}
-            className="max-w-full"
-            remarkPlugins={[remarkGfm, remarkMath]}
-            rehypePlugins={[rehypeKatex]}
+          {/* The data-theme attribute is used to set the theme for the Markdown content */}
+          <article
+            className="prose lg:prose-xl"
+            data-theme={message.role === "user" ? "light" : "dark"}
           >
-            {processMathContent(message.content)}
-          </Markdown>
-        </article>
+            <Markdown
+              components={{ code: CodeBlock }}
+              className="max-w-full"
+              remarkPlugins={[remarkGfm, remarkMath]}
+              rehypePlugins={[rehypeKatex]}
+            >
+              {processMathContent(message.content)}
+            </Markdown>
+          </article>
+        </div>
       </div>
+      {message.images?.map((image, index) => (
+        <ImageViewer
+          key={index}
+          className={msgContainerClasses}
+          image={image}
+        />
+      ))}
     </div>
   );
 }

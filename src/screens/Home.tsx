@@ -121,6 +121,11 @@ export default function Home() {
     }
   };
 
+  // The ScrollContainer will handle scrolling automatically when messages change
+  const handleInputAreaResize = () => {
+    setMessages([...messages]);
+  };
+
   return (
     <div className="flex-row flex flex-grow overflow-y-hidden relative">
       <ConversationsMenu />
@@ -157,6 +162,7 @@ export default function Home() {
           sendMessage={onSendMessage}
           isLoading={isLoading}
           stopResponse={stopResponse}
+          onResize={handleInputAreaResize}
         />
       </div>
     </div>

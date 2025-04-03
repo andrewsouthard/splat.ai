@@ -1,5 +1,5 @@
 import { useRef, useState, KeyboardEvent, useEffect } from "react";
-import { Bot, Folder, Image, Square } from "lucide-react";
+import { Blend, Bot, Folder, Image, Square, X } from "lucide-react";
 import { useSettingsStore } from "@/store/settingsStore";
 import { useShallow } from "zustand/react/shallow";
 import {
@@ -18,6 +18,7 @@ interface InputAreaProps {
   sendMessage: (message: string, images?: string[]) => void;
   isLoading: boolean;
   stopResponse: () => void;
+  onResize: () => void;
 }
 
 enum ChatTargetType {
@@ -43,6 +44,7 @@ export default function InputArea({
   sendMessage,
   isLoading,
   stopResponse,
+  onResize,
 }: InputAreaProps) {
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const [inputMessage, setInputMessage] = useState("");
@@ -98,6 +100,7 @@ export default function InputArea({
     const target = e.target as HTMLTextAreaElement;
     target.style.height = "auto";
     target.style.height = `${target.scrollHeight}px`;
+    onResize();
   };
 
   const onChangeChatTarget = (value: string) => {
@@ -124,11 +127,10 @@ export default function InputArea({
       directory: false,
     });
     if (typeof file === "string") {
-      console.log({ file });
-
       const fileContents = await readFile(file);
       const img = await uint8ArrayToBase64(fileContents);
       setAttachments((a) => [...a, { contents: img, fileType: "image" }]);
+      onResize();
     }
   };
 
@@ -167,9 +169,29 @@ export default function InputArea({
           onInput={onInput}
         ></textarea>
       </div>
+      {attachments &&
+        attachments.length > 0 &&
+        attachments.map((a) => {
+          if (a.fileType !== "image") return null;
+          return (
+            <div className="relative w-fit group">
+              <img
+                src={`${a.contents}`}
+                className="max-h-[200px] max-w-[150px]"
+              />
+              <button
+                onClick={() =>
+                  setAttachments(attachments.filter((att) => att !== a))
+                }
+                className="absolute top-1 right-1 p-1 bg-white/80 rounded-full hover:cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          );
+        })}
       <div className="flex items-center text-sm">
         <div className={clsx(bottomButtonClasses, "pr-1")}>
-          {/* <Blend className="pl-1 w-5 h-5 -mr-1 mt-0.5" /> */}
           <Select
             value={selectedChatTargetId}
             onValueChange={onChangeChatTarget}
@@ -185,7 +207,7 @@ export default function InputArea({
                 >
                   <div className="flex flex-row">
                     {chatTarget.type === ChatTargetType.Project ? (
-                      <Folder className="h-5 w-5 mr-2 -mt-0.25" />
+                      <Blend className="w-5 h-5 -ml-0.5 mr-2 -mt-0.25" />
                     ) : (
                       <Bot className="h-5 w-5 mr-2 -mt-0.25 -ml-0.5" />
                     )}
@@ -197,18 +219,16 @@ export default function InputArea({
           </Select>
         </div>
         <button
+          disabled={attachments.length > 0}
           onClick={addImageFromFile}
-          className={clsx(bottomButtonClasses, "ml-1", "px-4")}
+          className={clsx(bottomButtonClasses, "px-2", "mr-3", "ml-1")}
           title="Image"
         >
-          <Image className="ml-1 h-5 w-5 mr-2" />
+          <Image
+            className="h-5 w-5"
+            color={attachments.length > 0 ? "#ccc" : "black"}
+          />
         </button>
-        {attachments &&
-          attachments.length > 0 &&
-          attachments.map((a) => {
-            if (a.fileType !== "image") return null;
-            return <img src={`${a.contents}`} className="h-6 w-6" />;
-          })}
         {isLoading && (
           <button
             onClick={stopResponse}
