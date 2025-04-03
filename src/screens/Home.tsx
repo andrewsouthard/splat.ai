@@ -73,7 +73,7 @@ export default function Home() {
     keepStreamingRef.current = false;
   };
 
-  const onSendMessage = async (message: string) => {
+  const onSendMessage = async (message: string, images?: string[]) => {
     if (!message.trim() || isLoading) return;
     const activeConvo = conversations.find(
       (c) => c.id === activeConversationId
@@ -91,6 +91,7 @@ export default function Home() {
         id: crypto.randomUUID(),
         role: "user",
         content: message,
+        images: images,
         timestamp: new Date(),
         complete: true,
       };
@@ -118,6 +119,11 @@ export default function Home() {
       window?.find(searchValue);
       searchRef.current?.focus();
     }
+  };
+
+  // The ScrollContainer will handle scrolling automatically when messages change
+  const handleInputAreaResize = () => {
+    setMessages([...messages]);
   };
 
   return (
@@ -156,6 +162,7 @@ export default function Home() {
           sendMessage={onSendMessage}
           isLoading={isLoading}
           stopResponse={stopResponse}
+          onResize={handleInputAreaResize}
         />
       </div>
     </div>

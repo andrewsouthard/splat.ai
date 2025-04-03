@@ -1,5 +1,5 @@
 import { useRef, useState, KeyboardEvent, useEffect } from "react";
-import { Bot, Folder, Square } from "lucide-react";
+import { Blend, Bot, Folder, Image, Square, X } from "lucide-react";
 import { useSettingsStore } from "@/store/settingsStore";
 import { useShallow } from "zustand/react/shallow";
 import {
@@ -11,11 +11,15 @@ import {
 } from "@/components/ui/select";
 import { clsx } from "clsx";
 import { useProjectStore } from "@/store/projectStore";
+import { open } from "@tauri-apps/plugin-dialog";
+import { readFile } from "@tauri-apps/plugin-fs";
+import ImageAttachment from "./ImageAttachment";
 
 interface InputAreaProps {
-  sendMessage: (message: string) => void;
+  sendMessage: (message: string, images?: string[]) => void;
   isLoading: boolean;
   stopResponse: () => void;
+  onResize: () => void;
 }
 
 enum ChatTargetType {
@@ -29,6 +33,11 @@ interface ChatTarget {
   type: ChatTargetType;
 }
 
+interface MessageAttachment {
+  fileType: string;
+  contents: string;
+}
+
 const bottomButtonClasses =
   "h-8 flex-row flex items-center hover:shadow-sm py-0 rounded hover:bg-gray-100";
 
@@ -36,10 +45,12 @@ export default function InputArea({
   sendMessage,
   isLoading,
   stopResponse,
+  onResize,
 }: InputAreaProps) {
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const [inputMessage, setInputMessage] = useState("");
   const [chatTargets, setChatTargets] = useState<ChatTarget[]>([]);
+  const [attachments, setAttachments] = useState<MessageAttachment[]>([]);
   const { projects, selectedProjectId, selectProject } = useProjectStore(
     useShallow((state) => ({
       projects: state.projects,
@@ -68,7 +79,11 @@ export default function InputArea({
 
   const onSendMessage = () => {
     if (!inputMessage.trim()) return;
-    sendMessage(inputMessage);
+    const imagesToSend = attachments
+      .filter((a) => a.fileType === "image")
+      .map((a) => a.contents.split(",")[1]);
+    sendMessage(inputMessage, imagesToSend);
+    setAttachments([]);
     setInputMessage("");
     if (inputRef.current) {
       inputRef.current.style.height = "44px";
@@ -100,6 +115,44 @@ export default function InputArea({
     }
   };
 
+  const addImageFromFile = async () => {
+    const file = await open({
+      filters: [
+        {
+          name: "imageFilter",
+          extensions: ["svg", "png", "jpg", "jpeg", "heic"],
+        },
+      ],
+      multiple: false,
+      directory: false,
+    });
+    if (typeof file === "string") {
+      const fileContents = await readFile(file);
+      const img = await uint8ArrayToBase64(fileContents);
+      setAttachments((a) => [...a, { contents: img, fileType: "image" }]);
+      onResize();
+    }
+  };
+
+  const uint8ArrayToBase64 = async (arr: Uint8Array) => {
+    const blob = new Blob([arr]);
+
+    return new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        if (reader.result) {
+          resolve(reader.result.toString());
+        } else {
+          reject(new Error("Failed to convert blob to base64"));
+        }
+      };
+      reader.onerror = (error) => {
+        reject(error);
+      };
+      reader.readAsDataURL(blob);
+    });
+  };
+
   return (
     <div className={`px-4 pt-2 bg-white border-t flex w-full flex-col border`}>
       <div className="relative">
@@ -116,9 +169,22 @@ export default function InputArea({
           onInput={onInput}
         ></textarea>
       </div>
+      {attachments &&
+        attachments.length > 0 &&
+        attachments.map((a) => {
+          if (a.fileType !== "image") return null;
+          return (
+            <ImageAttachment
+              key={a.contents}
+              imageSrc={a.contents}
+              onClose={() =>
+                setAttachments(attachments.filter((att) => att !== a))
+              }
+            />
+          );
+        })}
       <div className="flex items-center text-sm">
         <div className={clsx(bottomButtonClasses, "pr-1")}>
-          {/* <Blend className="pl-1 w-5 h-5 -mr-1 mt-0.5" /> */}
           <Select
             value={selectedChatTargetId}
             onValueChange={onChangeChatTarget}
@@ -134,7 +200,7 @@ export default function InputArea({
                 >
                   <div className="flex flex-row">
                     {chatTarget.type === ChatTargetType.Project ? (
-                      <Folder className="h-5 w-5 mr-2 -mt-0.25" />
+                      <Blend className="w-5 h-5 -ml-0.25 mr-2 -mt-0.25" />
                     ) : (
                       <Bot className="h-5 w-5 mr-2 -mt-0.25 -ml-0.5" />
                     )}
@@ -145,6 +211,17 @@ export default function InputArea({
             </SelectContent>
           </Select>
         </div>
+        <button
+          disabled={attachments.length > 0}
+          onClick={addImageFromFile}
+          className={clsx(bottomButtonClasses, "px-2", "mr-3", "ml-1")}
+          title="Image"
+        >
+          <Image
+            className="h-5 w-5"
+            color={attachments.length > 0 ? "#ccc" : "black"}
+          />
+        </button>
         {isLoading && (
           <button
             onClick={stopResponse}

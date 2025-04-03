@@ -2,8 +2,19 @@ import { confirm } from "@tauri-apps/plugin-dialog";
 import { check } from '@tauri-apps/plugin-updater';
 import { relaunch } from '@tauri-apps/plugin-process';
 
+const LAST_CHECK_KEY = "lastUpdateCheck"
+const ONE_WEEK_AGO = 7 * 24 * 60 * 60;
+
 export async function checkForUpdates() {
-    const update = await check();
+    const lastChecked = localStorage.getItem(LAST_CHECK_KEY);
+    if (lastChecked && Date.now() - Number(lastChecked) < ONE_WEEK_AGO) {
+        return;
+    }
+    localStorage.setItem(LAST_CHECK_KEY, Date.now().toString())
+    const update = await check().catch(e => {
+        console.error(e);
+        return null;
+    });
     if (update) {
         console.log(
             `found update ${update.version} from ${update.date} with notes ${update.body}`

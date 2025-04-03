@@ -59,7 +59,6 @@ export const useConversationStore = create<ConversationStore>()(
                 get().conversations.find((c) => c.id === get().activeConversationId)
                     ?.messages || [],
             setConversationMessages: (messages: Message[]) => {
-                console.log(`setting conversation messages to ${JSON.stringify(messages)}`)
                 set((state) => ({
                     conversations: state.conversations.map((convo) =>
                         convo.id === get().activeConversationId
@@ -82,6 +81,17 @@ export const useConversationStore = create<ConversationStore>()(
         {
             name: 'conversation-storage',
             storage: createJSONStorage(() => window.localStorage),
+            // Don't persist images because we don't have enough localstorage for that.
+            partialize: (state) => {
+                const { conversations, ...rest } = state;
+                return {
+                    ...rest,
+                    conversations: conversations.map(c => ({
+                        ...c,
+                        messages: c.messages.map(m => ({ ...m, images: [] }))
+                    }))
+                }
+            }
         }
     )
     ));

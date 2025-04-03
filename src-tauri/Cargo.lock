@@ -4019,7 +4019,7 @@ dependencies = [
 
 [[package]]
 name = "splat"
-version = "0.0.7"
+version = "0.0.8"
 dependencies = [
  "env_logger",
  "log",
@@ -4029,6 +4029,7 @@ dependencies = [
  "tauri-build",
  "tauri-plugin-clipboard-manager",
  "tauri-plugin-dialog",
+ "tauri-plugin-fs",
  "tauri-plugin-global-shortcut",
  "tauri-plugin-log",
  "tauri-plugin-process",
