@@ -59,5 +59,5 @@ npx tauri dev
 Releases are done through Github Actions. To prepare for a release, first bump the version using `tauri-version`. To bump the patch version, run:
 
 ```bash
-npx tauri-version@latest patch
+npx tauri-version@latest --no-git patch
 ```
