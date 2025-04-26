@@ -11,6 +11,8 @@ import useGlobalShortcut from "@/hooks/useGlobalShortcut";
 import { useSettingsStore } from "@/store/settingsStore";
 import Toolbar from "@/elements/Toolbar";
 import SearchBox from "@/elements/SearchBox";
+import { useProjectStore } from "@/store/projectStore";
+import { toggleModel } from "@/lib/ollamaApi";
 
 export default function Home() {
   const [
@@ -28,12 +30,17 @@ export default function Home() {
       state.updateConversationSummary,
     ])
   );
-  const [isSearchingConversation, toggleSearchConversation] = useSettingsStore(
-    useShallow((state) => [
-      state.isSearchingConversation,
-      state.toggleSearchConversation,
-    ])
+  const [projects, selectedProjectId] = useProjectStore(
+    useShallow((state) => [state.projects, state.selectedProjectId])
   );
+  const [isSearchingConversation, toggleSearchConversation, selectedModel] =
+    useSettingsStore(
+      useShallow((state) => [
+        state.isSearchingConversation,
+        state.toggleSearchConversation,
+        state.selectedModel,
+      ])
+    );
   const [isLoading, setIsLoading] = useState(false);
   const [searchValue, setSearchValue] = useState<string>();
   const keepStreamingRef = useRef(false);
@@ -44,6 +51,12 @@ export default function Home() {
   useGlobalShortcut();
 
   useEffect(() => {
+    if (projects.length || selectedModel) {
+      const currentModel =
+        projects?.find((p) => p.id === selectedProjectId)?.model ||
+        selectedModel;
+      toggleModel(currentModel, "load");
+    }
     if (!conversations.length) {
       return;
     }

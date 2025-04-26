@@ -19,6 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { checkForUpdates } from "@/lib/updater";
 
 const GLOBAL_SHORTCUT_OPTIONS = ["None", "Option+Space", "Ctrl+Option+Space"];
 
@@ -185,6 +186,12 @@ export default function Settings() {
               </SelectContent>
             </Select>
           </div>
+          <Button
+            className="mt-2 bg-blue-500 hover:bg-blue-600 w-fit"
+            onClick={() => checkForUpdates(true)}
+          >
+            Check for Updates
+          </Button>
           <Button
             className="mt-2 bg-blue-500 hover:bg-blue-600 w-fit"
             onClick={clearConversations}

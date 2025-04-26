@@ -14,6 +14,7 @@ import { useProjectStore } from "@/store/projectStore";
 import { open } from "@tauri-apps/plugin-dialog";
 import { readFile } from "@tauri-apps/plugin-fs";
 import ImageAttachment from "./ImageAttachment";
+import { toggleModel } from "@/lib/ollamaApi";
 
 interface InputAreaProps {
   sendMessage: (message: string, images?: string[]) => void;
@@ -103,9 +104,14 @@ export default function InputArea({
     target.style.height = `${target.scrollHeight}px`;
   };
 
-  const onChangeChatTarget = (value: string) => {
+  const onChangeChatTarget = async (value: string) => {
     const newTarget = chatTargets.find((t) => t.value == value);
     if (!newTarget) return;
+    const oldModel =
+      projects?.find((p) => p.id === selectedProjectId)?.model || selectedModel;
+
+    // Unload the old model
+    await toggleModel(oldModel, "unload");
     if (newTarget.type === ChatTargetType.Model) {
       selectProject("");
       setSelectedModel(newTarget.value);
@@ -113,6 +119,10 @@ export default function InputArea({
       selectProject(newTarget.value);
       setSelectedModel("");
     }
+    const newModel =
+      projects?.find((p) => p.id === newTarget.value)?.model || newTarget.value;
+    // Load the new model into memory but don't wait for completion
+    toggleModel(newModel, "load");
   };
 
   const addImageFromFile = async () => {
