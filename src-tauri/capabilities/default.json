@@ -4,17 +4,32 @@
   "description": "Capability for the main window",
   "windows": ["main", "preferences"],
   "permissions": [
+    "clipboard-manager:allow-write-text",
     "core:default",
     "core:window:allow-set-focus",
-    "shell:allow-open",
+    "dialog:default",
+    "fs:default",
     "global-shortcut:allow-is-registered",
     "global-shortcut:allow-register",
     "global-shortcut:allow-unregister",
-    "store:default",
-    "clipboard-manager:allow-write-text",
-    "shell:default",
-    "dialog:default",
     "log:default",
-    "fs:default"
+    "shell:default",
+    {
+      "identifier": "shell:allow-execute",
+      "allow": [
+        {
+          "name": "exec-sh",
+          "cmd": "sh",
+          "args": [
+            "-c",
+            {
+              "validator": ".+"
+            }
+          ],
+          "sidecar": false
+        }
+      ]
+    },
+    "store:default"
   ]
 }

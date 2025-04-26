@@ -1,8 +1,13 @@
+import { GlobTool } from "@/lib/tools";
 import { useProjectStore } from "@/store/projectStore";
 import { useSettingsStore } from "@/store/settingsStore";
 import { Message } from "@/types";
 import { MutableRefObject, useEffect, useRef, useState } from "react";
 import { useShallow } from "zustand/react/shallow";
+
+const TOOLS = [
+    new GlobTool("/Users/andrew/repos/splat.ai")
+]
 
 export function useGetModelsApi() {
     const { apiUrl, setAvailableModels } = useSettingsStore();
@@ -88,6 +93,7 @@ export function useStreamingModelPullApi(abortControllerRef: MutableRefObject<Ab
 
 export function useStreamingChatApi(keepStreamingRef: any) {
     const abortControllerRef = useRef<AbortController | null>(null);
+    const [toolCalled, setToolCalled] = useState(false)
     const [messages, setMessages] = useState<Message[]>([]);
     const { projects, selectedProjectId } = useProjectStore();
     const { selectedModel, apiUrl } = useSettingsStore(
@@ -102,24 +108,40 @@ export function useStreamingChatApi(keepStreamingRef: any) {
             abortControllerRef.current?.abort();
             abortControllerRef.current = null;
         }
-
     }, [keepStreamingRef.current]);
 
-    const sendMessage = async (newMessage: Message) => {
+    useEffect(() => {
+        // If the last call is a tool response, push that back to the LLM.
+        if (toolCalled && messages.length > 0) {
+            setToolCalled(false)
+            console.log("sending tool results back to model")
+            sendMessage()
+        } else {
+            console.log("m" + JSON.stringify(messages))
+        }
+    }, [toolCalled])
+
+    const sendMessage = async (newMessage?: Message) => {
         const assistantMessageId = crypto.randomUUID();
         abortControllerRef.current = new AbortController();
-        keepStreamingRef.current = true;
+        if (!keepStreamingRef.current)
+            keepStreamingRef.current = true;
         let selectedProject;
         if (selectedProjectId) {
             selectedProject = projects.find(p => p.id === selectedProjectId)
         }
 
-        const newMessages = [...messages, newMessage];
+        let newMessages = [...messages];
+        console.log("nm" + JSON.stringify(newMessages))
+        if (newMessage) {
+            newMessages.push(newMessage)
+        }
         // Add the system message if this is the first message and one is set.
         if (selectedProject?.systemPrompt && selectedProject.systemPrompt.length > 1 && newMessages.length === 1) {
+            const newSystemPrompt = selectedProject.systemPrompt
             newMessages.unshift({
                 id: crypto.randomUUID(),
-                content: selectedProject.systemPrompt,
+                content: newSystemPrompt,
                 role: "system",
                 complete: true,
                 timestamp: new Date()
@@ -130,17 +152,22 @@ export function useStreamingChatApi(keepStreamingRef: any) {
 
         setMessages(newMessages);
 
+        const tools = TOOLS.map(t => ({
+            "type": "function",
+            "function": t.usage(),
+        }))
         try {
             const response = await fetch(`${apiUrl}/api/chat`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                 },
-                signal: abortControllerRef.current.signal,
+                // signal: abortControllerRef.current.signal,
                 body: JSON.stringify({
                     model,
                     messages: newMessages,
                     options,
+                    tools
                 }),
             });
 
@@ -170,33 +197,68 @@ export function useStreamingChatApi(keepStreamingRef: any) {
                 for (const line of lines) {
                     try {
                         const json = JSON.parse(line);
+                        console.log({ json })
+                        // json.message?.content.contains(/Action: (\w+): (.*)/)) {
+                        if (json.message.tool_calls) {
+                            console.log("yes sirreee bob" + JSON.stringify(json.message.tool_calls))
+                            const toolCall = json.message.tool_calls[0].function
+                            // XXX: HANDLE ERROR CASE
+                            const tool = TOOLS.find(t => t.name === toolCall.name) || TOOLS[0]
+                            const results = await tool.use(toolCall.arguments)
+                            setMessages((prev) => {
+                                const newMessages = [...prev];
+                                const messageIndex = newMessages.findIndex(
+                                    (msg) => msg.id === assistantMessageId
+                                );
 
-                        setMessages((prev) => {
-                            const newMessages = [...prev];
-                            const messageIndex = newMessages.findIndex(
-                                (msg) => msg.id === assistantMessageId
-                            );
-
-                            if (messageIndex !== -1) {
-                                newMessages[messageIndex] = {
-                                    ...newMessages[messageIndex],
-                                    content:
-                                        newMessages[messageIndex].content +
-                                        (json?.message?.content ?? ""),
-                                };
-                                if (json.done) {
+                                if (messageIndex !== -1) {
                                     newMessages[messageIndex] = {
                                         ...newMessages[messageIndex],
+                                        role: "tool",
+                                        toolAction: tool.action,
+                                        content: `Using the ${tool.name} tool results, help the user: ${JSON.stringify(results)}`,
                                         complete: true,
                                         inputTokens: json?.prompt_eval_count,
                                         tokens: json?.eval_count,
                                         tokensPerSecond: Number((json.eval_count / json.eval_duration * 10 ** 9).toFixed(1))
                                     };
                                 }
-                            }
 
-                            return newMessages;
-                        });
+                                return newMessages;
+
+                            });
+                            setToolCalled(true)
+                        } else {
+                            console.log("other..." + JSON.stringify(messages))
+                            setMessages((prev) => {
+                                const newMessages = [...prev];
+                                const messageIndex = newMessages.findIndex(
+                                    (msg) => msg.id === assistantMessageId
+                                );
+
+                                if (messageIndex !== -1) {
+                                    newMessages[messageIndex] = {
+                                        ...newMessages[messageIndex],
+                                        content:
+                                            newMessages[messageIndex].content +
+                                            (json?.message?.content ?? ""),
+                                    };
+                                    if (json.done) {
+                                        newMessages[messageIndex] = {
+                                            ...newMessages[messageIndex],
+                                            complete: true,
+                                            inputTokens: json?.prompt_eval_count,
+                                            tokens: json?.eval_count,
+                                            tokensPerSecond: Number((json.eval_count / json.eval_duration * 10 ** 9).toFixed(1))
+                                        };
+                                    }
+                                }
+
+                                return newMessages;
+                            });
+                            if (json.done) {
+                            }
+                        }
 
                         if (json.done) {
                             break;
@@ -222,9 +284,11 @@ export function useStreamingChatApi(keepStreamingRef: any) {
                     complete: true,
                 },
             ]);
-        } finally {
+            console.log("finally...")
             abortControllerRef.current = null;
             keepStreamingRef.current = false;
+        } finally {
+
         }
     };
     return { messages, setMessages, sendMessage };

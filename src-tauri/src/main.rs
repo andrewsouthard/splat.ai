@@ -5,11 +5,14 @@ use tauri::menu::*;
 use tauri::Emitter;
 use tauri::Manager;
 use tauri::{AppHandle, Wry};
+mod tools;
+use tools::find::find_files;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     // env_logger::init();
 
     tauri::Builder::default()
+        .invoke_handler(tauri::generate_handler![find_files])
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_process::init())
         .plugin(tauri_plugin_updater::Builder::new().build())

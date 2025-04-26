@@ -9,6 +9,7 @@ interface Project {
     model: string
     contextLength: number
     systemPrompt: string
+    includeTools: boolean
 }
 
 interface ProjectStore {
