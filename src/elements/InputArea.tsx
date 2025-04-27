@@ -149,7 +149,7 @@ export default function InputArea({
 
     return new Promise<string>((resolve, reject) => {
       const reader = new FileReader();
-      reader.onloadend = () => {
+      reader.onload = () => {
         if (reader.result) {
           resolve(reader.result.toString());
         } else {
@@ -163,6 +163,34 @@ export default function InputArea({
     });
   };
 
+  const onPaste = async (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
+    const { items } = e.clipboardData;
+    for (let item of items) {
+      // Check if the item is an image
+      if (item.type.startsWith("image/")) {
+        const file = item.getAsFile();
+        if (!file) continue;
+        const img: string = await new Promise((resolve, reject) => {
+          try {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+              const res = e.target?.result;
+              if (res) {
+                resolve(res.toString());
+              } else {
+                reject("Could not read image");
+              }
+            };
+            reader.readAsDataURL(file);
+          } catch (e) {
+            reject(e);
+          }
+        });
+        setAttachments((a) => [...a, { contents: img, fileType: "image" }]);
+      }
+    }
+  };
+
   return (
     <div className={`px-4 pt-2 bg-white border-t flex w-full flex-col border`}>
       <div className="relative">
@@ -173,6 +201,7 @@ export default function InputArea({
           value={inputMessage}
           onChange={(e) => setInputMessage(e.target.value)}
           onKeyDown={onKeyDown}
+          onPaste={onPaste}
           placeholder="Type your message..."
           className="flex-grow p-2 w-full min-h-11 resize-none overflow-y-scroll max-h-full outline-none"
           rows={1}
