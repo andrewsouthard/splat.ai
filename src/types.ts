@@ -1,10 +1,15 @@
 
+export interface MessageAttachment {
+    fileType: string;
+    contents: string;
+}
+
 export interface Message {
     id: string;
     role: "user" | "assistant" | "system";
     content: string;
     timestamp: Date;
-    images?: string[];
+    attachments?: MessageAttachment[];
     complete: boolean;
     inputTokens?: number;
     tokens?: number;

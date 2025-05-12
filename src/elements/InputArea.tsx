@@ -1,5 +1,5 @@
 import { useRef, useState, KeyboardEvent, useEffect } from "react";
-import { Blend, Bot, Folder, Image, Square, X } from "lucide-react";
+import { Blend, Bot, Paperclip, Square } from "lucide-react";
 import { useSettingsStore } from "@/store/settingsStore";
 import { useShallow } from "zustand/react/shallow";
 import {
@@ -15,9 +15,15 @@ import { open } from "@tauri-apps/plugin-dialog";
 import { readFile } from "@tauri-apps/plugin-fs";
 import ImageAttachment from "./ImageAttachment";
 import { toggleModel } from "@/lib/ollamaApi";
+import {
+  detectMimeTypeFromSignature,
+  estimateTokenCount,
+  uint8ArrayToBase64,
+} from "@/lib/inputHelpers";
+import { MessageAttachment } from "@/types";
 
 interface InputAreaProps {
-  sendMessage: (message: string, images?: string[]) => void;
+  sendMessage: (message: string, attachments?: MessageAttachment[]) => void;
   isLoading: boolean;
   stopResponse: () => void;
   onResize: () => void;
@@ -34,10 +40,7 @@ interface ChatTarget {
   type: ChatTargetType;
 }
 
-interface MessageAttachment {
-  fileType: string;
-  contents: string;
-}
+const SUPPORTED_IMAGE_TYPES = ["image/jpg", "image/jpeg", "image/png"];
 
 const bottomButtonClasses =
   "h-8 flex-row flex items-center hover:shadow-sm py-0 rounded hover:bg-gray-100";
@@ -80,10 +83,8 @@ export default function InputArea({
 
   const onSendMessage = () => {
     if (!inputMessage.trim()) return;
-    const imagesToSend = attachments
-      .filter((a) => a.fileType === "image")
-      .map((a) => a.contents.split(",")[1]);
-    sendMessage(inputMessage, imagesToSend);
+
+    sendMessage(inputMessage, attachments);
     setAttachments([]);
     setInputMessage("");
     if (inputRef.current) {
@@ -125,70 +126,82 @@ export default function InputArea({
     toggleModel(newModel, "load");
   };
 
-  const addImageFromFile = async () => {
-    const file = await open({
-      filters: [
-        {
-          name: "imageFilter",
-          extensions: ["svg", "png", "jpg", "jpeg", "heic"],
-        },
-      ],
-      multiple: false,
+  const addAttachmentsFromFile = async () => {
+    const files = await open({
+      multiple: true,
       directory: false,
     });
-    if (typeof file === "string") {
+    const attachmentsList: MessageAttachment[] = [];
+    if (!files) return;
+    for (let file of files) {
+      if (typeof file !== "string") continue;
       const fileContents = await readFile(file);
-      const img = await uint8ArrayToBase64(fileContents);
-      setAttachments((a) => [...a, { contents: img, fileType: "image" }]);
-      onResize();
-    }
-  };
-
-  const uint8ArrayToBase64 = async (arr: Uint8Array) => {
-    const blob = new Blob([arr]);
-
-    return new Promise<string>((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => {
-        if (reader.result) {
-          resolve(reader.result.toString());
-        } else {
-          reject(new Error("Failed to convert blob to base64"));
+      const contents = await uint8ArrayToBase64(fileContents);
+      const parts = contents.split(";");
+      // Extract the MIME type from the first part
+      let fileType = parts[0].split(":")[1];
+      // Try to get the type from the Uint8Array
+      if (fileType === "application/octet-stream") {
+        const mimeType = detectMimeTypeFromSignature(fileContents);
+        if (mimeType) {
+          fileType = mimeType;
         }
-      };
-      reader.onerror = (error) => {
-        reject(error);
-      };
-      reader.readAsDataURL(blob);
-    });
+      }
+
+      attachmentsList.push({ contents, fileType });
+    }
+    addNewAttachments(attachmentsList);
   };
 
   const onPaste = async (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
     const { items } = e.clipboardData;
+    if (items.length > 0) e.preventDefault();
+    const newAttachments: MessageAttachment[] = [];
     for (let item of items) {
-      // Check if the item is an image
-      if (item.type.startsWith("image/")) {
-        const file = item.getAsFile();
-        if (!file) continue;
-        const img: string = await new Promise((resolve, reject) => {
-          try {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-              const res = e.target?.result;
-              if (res) {
-                resolve(res.toString());
-              } else {
-                reject("Could not read image");
-              }
-            };
-            reader.readAsDataURL(file);
-          } catch (e) {
-            reject(e);
-          }
-        });
-        setAttachments((a) => [...a, { contents: img, fileType: "image" }]);
-      }
+      const file = item.getAsFile();
+      console.log("file type is " + file?.type);
+      if (!file) continue;
+      const contents: string = await new Promise((resolve, reject) => {
+        try {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            const res = e.target?.result;
+            if (res) {
+              resolve(res.toString());
+            } else {
+              reject("Could not read image");
+            }
+          };
+          reader.readAsDataURL(file);
+        } catch (e) {
+          reject(e);
+        }
+      });
+      newAttachments.push({ contents, fileType: file.type });
     }
+    addNewAttachments(newAttachments);
+  };
+
+  const addNewAttachments = (attachmentsToAdd: MessageAttachment[]) => {
+    const newAttachments: MessageAttachment[] = [];
+    attachmentsToAdd.forEach((a) => {
+      const tokens = estimateTokenCount(a.contents);
+      if (a.fileType.startsWith("text/") && tokens < 8000) {
+        newAttachments.push(a);
+      } else if (
+        a.fileType.startsWith("image/") &&
+        // XXX: FIX ME
+        tokens < 1_000_000 &&
+        SUPPORTED_IMAGE_TYPES.includes(a.fileType)
+      ) {
+        newAttachments.push(a);
+      } else {
+        console.error("File too big");
+        console.error(a);
+      }
+    });
+    setAttachments((a) => a.concat(newAttachments));
+    onResize();
   };
 
   return (
@@ -208,20 +221,29 @@ export default function InputArea({
           onInput={onInput}
         ></textarea>
       </div>
-      {attachments &&
-        attachments.length > 0 &&
-        attachments.map((a) => {
-          if (a.fileType !== "image") return null;
-          return (
-            <ImageAttachment
-              key={a.contents}
-              imageSrc={a.contents}
-              onClose={() =>
-                setAttachments(attachments.filter((att) => att !== a))
-              }
-            />
-          );
-        })}
+      <div className="flex flex-row">
+        {attachments &&
+          attachments.length > 0 &&
+          attachments.map((a) => {
+            if (a.fileType.startsWith("image")) {
+              return (
+                <ImageAttachment
+                  key={a.contents}
+                  imageSrc={a.contents}
+                  onClose={() =>
+                    setAttachments(attachments.filter((att) => att !== a))
+                  }
+                />
+              );
+            } else if (a.fileType.startsWith("text")) {
+              return (
+                <p className="bg-red-300" key={a.contents}>
+                  Attachment
+                </p>
+              );
+            }
+          })}
+      </div>
       <div className="flex items-center text-sm">
         <div className={clsx(bottomButtonClasses, "pr-1")}>
           <Select
@@ -252,12 +274,12 @@ export default function InputArea({
         </div>
         <button
           disabled={attachments.length > 0}
-          onClick={addImageFromFile}
-          className={clsx(bottomButtonClasses, "px-2", "mr-3", "ml-1")}
-          title="Image"
+          onClick={addAttachmentsFromFile}
+          className={clsx(bottomButtonClasses, "px-2", "mr-3", "ml-0")}
+          title="Attachments"
         >
-          <Image
-            className="h-5 w-5"
+          <Paperclip
+            className="h-5 w-5 -rotate-45"
             color={attachments.length > 0 ? "#ccc" : "black"}
           />
         </button>

@@ -1,3 +1,4 @@
+import { transformMessageAttachments } from "@/lib/utils";
 import { useProjectStore } from "@/store/projectStore";
 import { useSettingsStore } from "@/store/settingsStore";
 import { Message } from "@/types";
@@ -139,7 +140,7 @@ export function useStreamingChatApi(keepStreamingRef: any) {
                 signal: abortControllerRef.current.signal,
                 body: JSON.stringify({
                     model,
-                    messages: newMessages,
+                    messages: newMessages.map(transformMessageAttachments),
                     options,
                 }),
             });

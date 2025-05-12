@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import ScrollContainer from "@/elements/ScrollContainer";
 import ChatMessage from "@/elements/ChatMessage";
 import { useConversationStore } from "@/store/conversationStore";
-import { Message } from "@/types";
+import { Message, MessageAttachment } from "@/types";
 import { useShallow } from "zustand/react/shallow";
 import ConversationsMenu from "@/elements/ConversationsMenu";
 import InputArea from "@/elements/InputArea";
@@ -86,7 +86,10 @@ export default function Home() {
     keepStreamingRef.current = false;
   };
 
-  const onSendMessage = async (message: string, images?: string[]) => {
+  const onSendMessage = async (
+    message: string,
+    attachments?: MessageAttachment[]
+  ) => {
     if (!message.trim() || isLoading) return;
     const activeConvo = conversations.find(
       (c) => c.id === activeConversationId
@@ -104,7 +107,7 @@ export default function Home() {
         id: crypto.randomUUID(),
         role: "user",
         content: message,
-        images: images,
+        attachments: attachments,
         timestamp: new Date(),
         complete: true,
       };
