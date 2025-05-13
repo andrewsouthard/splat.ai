@@ -100,8 +100,9 @@ export async function uint8ArrayToBase64(arr: Uint8Array) {
 
 export function convertBase64ToPlaintext(base64String: string) {
   try {
+    if (!base64String.includes("base64")) return base64String;
     // Grab the substring that contains the base64 string
-    const sub = base64String.split(";")[1].replace("base64,", "");
+    const sub = base64String.split(";")?.[1]?.replace("base64,", "");
     // Decode base64 to binary string
     const binaryString = atob(sub);
 

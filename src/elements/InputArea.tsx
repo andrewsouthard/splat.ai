@@ -21,6 +21,7 @@ import {
   uint8ArrayToBase64,
 } from "@/lib/inputHelpers";
 import { MessageAttachment } from "@/types";
+import FileAttachment from "./FileAttachment";
 
 interface InputAreaProps {
   sendMessage: (message: string, attachments?: MessageAttachment[]) => void;
@@ -157,27 +158,56 @@ export default function InputArea({
     const { items } = e.clipboardData;
     if (items.length > 0) e.preventDefault();
     const newAttachments: MessageAttachment[] = [];
-    for (let item of items) {
+
+    for (let item of Array.from(items)) {
+      let contents: string, fileType: string;
       const file = item.getAsFile();
-      console.log("file type is " + file?.type);
-      if (!file) continue;
-      const contents: string = await new Promise((resolve, reject) => {
-        try {
-          const reader = new FileReader();
-          reader.onload = (e) => {
-            const res = e.target?.result;
-            if (res) {
-              resolve(res.toString());
-            } else {
-              reject("Could not read image");
-            }
-          };
-          reader.readAsDataURL(file);
-        } catch (e) {
-          reject(e);
-        }
-      });
-      newAttachments.push({ contents, fileType: file.type });
+      if (file) {
+        console.log("file type is " + file?.type);
+        console.log("file is" + file);
+        fileType = file.type;
+        contents = await new Promise((resolve, reject) => {
+          try {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+              const res = e.target?.result;
+              if (res) {
+                resolve(res.toString());
+              } else {
+                reject("Could not read image");
+              }
+            };
+            reader.readAsDataURL(file);
+          } catch (e) {
+            reject(e);
+          }
+        });
+      } else {
+        fileType = "text";
+        contents = await new Promise((resolve) => {
+          try {
+            // If getAsString doesn't return in < 100ms, timeout.
+            // This happens for some items, not sure why
+            const clear = setTimeout(() => {
+              resolve("");
+            }, 100);
+            item.getAsString((data) => {
+              clearTimeout(clear);
+              if (data) {
+                resolve(data);
+              } else {
+                resolve("");
+              }
+            });
+          } catch (e) {
+            console.error(e);
+            resolve("");
+          }
+        });
+      }
+      if (contents && contents.length > 0) {
+        newAttachments.push({ contents, fileType });
+      }
     }
     addNewAttachments(newAttachments);
   };
@@ -186,10 +216,10 @@ export default function InputArea({
     const newAttachments: MessageAttachment[] = [];
     attachmentsToAdd.forEach((a) => {
       const tokens = estimateTokenCount(a.contents);
-      if (a.fileType.startsWith("text/") && tokens < 8000) {
+      if (a.fileType.startsWith("text") && tokens < 8000) {
         newAttachments.push(a);
       } else if (
-        a.fileType.startsWith("image/") &&
+        a.fileType.startsWith("image") &&
         // XXX: FIX ME
         tokens < 1_000_000 &&
         SUPPORTED_IMAGE_TYPES.includes(a.fileType)
@@ -237,9 +267,12 @@ export default function InputArea({
               );
             } else if (a.fileType.startsWith("text")) {
               return (
-                <p className="bg-red-300" key={a.contents}>
-                  Attachment
-                </p>
+                <FileAttachment
+                  fileContent={a.contents}
+                  onClose={() =>
+                    setAttachments(attachments.filter((att) => att !== a))
+                  }
+                />
               );
             }
           })}

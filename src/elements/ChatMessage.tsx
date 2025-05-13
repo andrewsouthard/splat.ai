@@ -6,7 +6,8 @@ import CodeBlock from "./CodeBlock";
 import clsx from "clsx";
 import { Message } from "@/types";
 import "katex/dist/katex.min.css";
-import ImageViewer from "./ImageViewer";
+import AttachmentViewer from "./AttachmentViewer";
+import FileAttachment from "./FileAttachment";
 
 interface ChatMessageProps {
   message: Message;
@@ -77,13 +78,25 @@ export default function ChatMessage({ message }: ChatMessageProps) {
           </article>
         </div>
       </div>
-      {message.images?.map((image, index) => (
-        <ImageViewer
-          key={index}
-          className={msgContainerClasses}
-          image={image}
-        />
-      ))}
+      {message.attachments?.map((attachment, index) => {
+        // if (attachment.fileType.startsWith("image")) {
+        return (
+          <AttachmentViewer
+            key={index}
+            className={msgContainerClasses}
+            attachment={attachment}
+          />
+        );
+        // } else if (attachment.fileType.startsWith("text")) {
+        //   return (
+        //     <FileAttachment
+        //       key={index}
+        //       fileContent={attachment.contents}
+        //       showCloseButton={false}
+        //     />
+        //   );
+        // }
+      })}
     </div>
   );
 }
