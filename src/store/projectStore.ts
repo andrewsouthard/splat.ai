@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
 import { createBroadcastMiddleware } from './broadcastMiddleware';
-
+import createTauriStoreAdapter from './tauriStoreAdapter';
 
 interface Project {
     id: string
@@ -20,35 +20,38 @@ interface ProjectStore {
     selectProject: (id: string) => void
 }
 
-const broadcastMiddleware = createBroadcastMiddleware({
+const broadcastMiddleware = createBroadcastMiddleware<ProjectStore>({
     channelName: 'project-channel'
 });
 
-export const useProjectStore = create<ProjectStore>(
-    broadcastMiddleware(persist(
-        (set) => ({
-            projects: [],
-            selectedProjectId: null,
-            addProject: (project, callback) => {
-                const newId = crypto.randomUUID()
-                set((state) => ({
-                    projects: [...state.projects, { ...project, id: newId }],
-                }));
-                if (callback) callback(newId);
-            },
-            removeProject: (id) => set((state) => ({
-                projects: state.projects.filter(p => p.id !== id),
-                selectedProjectId: state.selectedProjectId === id ? null : state.selectedProjectId
-            })),
-            updateProject: (id, updates) => set((state) => ({
-                projects: state.projects.map(project =>
-                    project.id === id ? { ...project, ...updates } : project
-                )
-            })),
-            selectProject: (id) => set({ selectedProjectId: id })
-        }),
+export const useProjectStore = create<ProjectStore>()(
+    persist<ProjectStore>(
+        broadcastMiddleware(
+            (set) => ({
+                projects: [],
+                selectedProjectId: null,
+                addProject: (project, callback) => {
+                    const newId = crypto.randomUUID()
+                    set((state) => ({
+                        projects: [...state.projects, { ...project, id: newId }],
+                    }));
+                    if (callback) callback(newId);
+                },
+                removeProject: (id) => set((state) => ({
+                    projects: state.projects.filter(p => p.id !== id),
+                    selectedProjectId: state.selectedProjectId === id ? null : state.selectedProjectId
+                })),
+                updateProject: (id, updates) => set((state) => ({
+                    projects: state.projects.map(project =>
+                        project.id === id ? { ...project, ...updates } : project
+                    )
+                })),
+                selectProject: (id) => set({ selectedProjectId: id })
+            })
+        ),
         {
             name: 'projects-storage',
-            storage: createJSONStorage(() => window.localStorage),
-        }))
+            storage: createJSONStorage(() => createTauriStoreAdapter('projects')),
+        }
+    )
 );
