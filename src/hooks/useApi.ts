@@ -1,3 +1,4 @@
+import { transformMessageAttachments } from "@/lib/utils";
 import { useProjectStore } from "@/store/projectStore";
 import { useSettingsStore } from "@/store/settingsStore";
 import { Message } from "@/types";
@@ -139,7 +140,7 @@ export function useStreamingChatApi(keepStreamingRef: any) {
                 signal: abortControllerRef.current.signal,
                 body: JSON.stringify({
                     model,
-                    messages: newMessages,
+                    messages: newMessages.map(transformMessageAttachments),
                     options,
                 }),
             });
@@ -192,13 +193,19 @@ export function useStreamingChatApi(keepStreamingRef: any) {
                                         tokens: json?.eval_count,
                                         tokensPerSecond: Number((json.eval_count / json.eval_duration * 10 ** 9).toFixed(1))
                                     };
+                                } else if (json.error) {
+                                    newMessages[messageIndex] = {
+                                        ...newMessages[messageIndex],
+                                        content: newMessages[messageIndex].content + json.error,
+                                        complete: true,
+                                    };
                                 }
                             }
 
                             return newMessages;
                         });
 
-                        if (json.done) {
+                        if (json?.done || json?.error) {
                             break;
                         }
                     } catch (e) {

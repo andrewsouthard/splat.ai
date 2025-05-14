@@ -6,7 +6,7 @@ import CodeBlock from "./CodeBlock";
 import clsx from "clsx";
 import { Message } from "@/types";
 import "katex/dist/katex.min.css";
-import ImageViewer from "./ImageViewer";
+import AttachmentViewer from "./AttachmentViewer";
 
 interface ChatMessageProps {
   message: Message;
@@ -77,11 +77,11 @@ export default function ChatMessage({ message }: ChatMessageProps) {
           </article>
         </div>
       </div>
-      {message.images?.map((image, index) => (
-        <ImageViewer
-          key={index}
+      {message.attachments?.map((attachment, index) => (
+        <AttachmentViewer
+          key={`a-${index}`}
           className={msgContainerClasses}
-          image={image}
+          attachment={attachment}
         />
       ))}
     </div>
