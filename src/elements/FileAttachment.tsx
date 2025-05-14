@@ -1,5 +1,8 @@
 import { convertBase64ToPlaintext } from "@/lib/inputHelpers";
 import { X } from "lucide-react";
+import { useEffect, useState } from "react";
+import { codeToHtml } from "shiki";
+import "./CodeBlock.css";
 
 interface FileAttachmentProps {
   fileContent: string;
@@ -20,18 +23,33 @@ export default function FileAttachment({
   showCloseButton = true,
   previewLines = 5,
 }: FileAttachmentProps) {
-  // Get the first few lines of the file content
-  const previewContent = convertBase64ToPlaintext(fileContent)
-    .split("\n")
-    .slice(0, previewLines)
-    .join("\n");
+  const [highlighted, setHighlighted] = useState("<span />");
+
+  useEffect(() => {
+    async function highlight() {
+      const content = convertBase64ToPlaintext(fileContent)
+        .split("\n")
+        .slice(0, previewLines)
+        .join("\n");
+
+      const highlightedCode = await codeToHtml(content, {
+        lang: "text",
+        theme: "one-dark-pro",
+      });
+      setHighlighted(highlightedCode);
+    }
+    highlight();
+  }, [fileContent, previewLines]);
 
   return (
     <div className={`relative w-fit group ${className}`}>
       <div
-        className={`max-h-[${maxHeight}] max-w-[${maxWidth}] rounded-xl bg-black p-4 font-mono text-sm text-white overflow-auto`}
+        className={`max-h-[${maxHeight}] max-w-[${maxWidth}] rounded-xl overflow-auto`}
       >
-        <pre className="whitespace-pre-wrap">{previewContent}</pre>
+        <div
+          className="text-left break-words overflow-x-hidden [&_pre]:whitespace-pre-wrap [&_code]:whitespace-pre-wrap"
+          dangerouslySetInnerHTML={{ __html: highlighted }}
+        />
       </div>
       {showCloseButton && (
         <button
