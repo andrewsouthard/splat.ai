@@ -193,13 +193,19 @@ export function useStreamingChatApi(keepStreamingRef: any) {
                                         tokens: json?.eval_count,
                                         tokensPerSecond: Number((json.eval_count / json.eval_duration * 10 ** 9).toFixed(1))
                                     };
+                                } else if (json.error) {
+                                    newMessages[messageIndex] = {
+                                        ...newMessages[messageIndex],
+                                        content: newMessages[messageIndex].content + json.error,
+                                        complete: true,
+                                    };
                                 }
                             }
 
                             return newMessages;
                         });
 
-                        if (json.done) {
+                        if (json?.done || json?.error) {
                             break;
                         }
                     } catch (e) {

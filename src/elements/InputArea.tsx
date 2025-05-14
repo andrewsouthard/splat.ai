@@ -41,7 +41,12 @@ interface ChatTarget {
   type: ChatTargetType;
 }
 
-const SUPPORTED_IMAGE_TYPES = ["image/jpg", "image/jpeg", "image/png"];
+const SUPPORTED_IMAGE_TYPES = [
+  "image/jpg",
+  "image/jpeg",
+  "image/png",
+  "image/gif",
+];
 
 const bottomButtonClasses =
   "h-8 flex-row flex items-center hover:shadow-sm py-0 rounded hover:bg-gray-100";
@@ -216,17 +221,20 @@ export default function InputArea({
     const newAttachments: MessageAttachment[] = [];
     attachmentsToAdd.forEach((a) => {
       const tokens = estimateTokenCount(a.contents);
-      if (a.fileType.startsWith("text") && tokens < 8000) {
-        newAttachments.push(a);
+      if (a.fileType.startsWith("text")) {
+        if (tokens < 8000) {
+          newAttachments.push(a);
+        } else {
+          console.error("File too big");
+          console.error(a);
+        }
       } else if (
         a.fileType.startsWith("image") &&
-        // XXX: FIX ME
-        tokens < 1_000_000 &&
         SUPPORTED_IMAGE_TYPES.includes(a.fileType)
       ) {
         newAttachments.push(a);
       } else {
-        console.error("File too big");
+        console.error("Unknown file type");
         console.error(a);
       }
     });
@@ -268,7 +276,7 @@ export default function InputArea({
             } else if (a.fileType.startsWith("text")) {
               return (
                 <FileAttachment
-                  fileContent={a.contents}
+                  attachment={a}
                   onClose={() =>
                     setAttachments(attachments.filter((att) => att !== a))
                   }
@@ -306,7 +314,6 @@ export default function InputArea({
           </Select>
         </div>
         <button
-          disabled={attachments.length > 0}
           onClick={addAttachmentsFromFile}
           className={clsx(bottomButtonClasses, "px-2", "mr-3", "ml-0")}
           title="Attachments"

@@ -2,12 +2,10 @@ import { useState, useEffect } from "react";
 import clsx from "clsx";
 import ImageAttachment from "./ImageAttachment";
 import FileAttachment from "./FileAttachment";
+import { MessageAttachment } from "@/types";
 
 interface AttachmentViewerProps {
-  attachment: {
-    fileType: string;
-    contents: string;
-  };
+  attachment: MessageAttachment;
   className?: string;
 }
 
@@ -53,7 +51,7 @@ export default function AttachmentViewer({
           />
         ) : (
           <FileAttachment
-            fileContent={attachment.contents}
+            attachment={attachment}
             className="rounded-xl border border-gray-100"
             maxHeight="200px"
             maxWidth="200px"
@@ -84,7 +82,7 @@ export default function AttachmentViewer({
               />
             ) : (
               <FileAttachment
-                fileContent={attachment.contents}
+                attachment={attachment}
                 onClose={() => setIsOverlayOpen(false)}
                 className="rounded-xl"
                 maxHeight="80vh"

@@ -3,9 +3,10 @@ import { X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { codeToHtml } from "shiki";
 import "./CodeBlock.css";
+import { MessageAttachment } from "@/types";
 
 interface FileAttachmentProps {
-  fileContent: string;
+  attachment: MessageAttachment;
   onClose?: () => void;
   className?: string;
   maxHeight?: string;
@@ -15,7 +16,7 @@ interface FileAttachmentProps {
 }
 
 export default function FileAttachment({
-  fileContent,
+  attachment,
   onClose = () => {},
   className = "",
   maxHeight = "200px",
@@ -27,19 +28,20 @@ export default function FileAttachment({
 
   useEffect(() => {
     async function highlight() {
-      const content = convertBase64ToPlaintext(fileContent)
+      const content = convertBase64ToPlaintext(attachment.contents)
         .split("\n")
         .slice(0, previewLines)
         .join("\n");
 
+      const lang = attachment.fileType.replace("text/", "");
       const highlightedCode = await codeToHtml(content, {
-        lang: "text",
+        lang: lang ?? "text",
         theme: "one-dark-pro",
       });
       setHighlighted(highlightedCode);
     }
     highlight();
-  }, [fileContent, previewLines]);
+  }, [attachment, previewLines]);
 
   return (
     <div className={`relative w-fit group ${className}`}>
