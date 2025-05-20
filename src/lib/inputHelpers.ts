@@ -1,3 +1,5 @@
+import { toast } from "sonner";
+
 /**
  * Estimates token count for base64-encoded images or text files with auto-detection.
  * 
@@ -118,7 +120,6 @@ export function convertBase64ToPlaintext(base64String: string) {
     return text;
   } catch (e) {
     console.error(e)
-    console.error("Error parsing file!")
     throw new Error("Failed to parse file")
   }
 }

@@ -2,49 +2,18 @@ import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeKatex from "rehype-katex";
 import remarkMath from "remark-math";
+import rehypeRaw from "rehype-raw";
 import CodeBlock from "./CodeBlock";
 import clsx from "clsx";
 import { Message } from "@/types";
 import "katex/dist/katex.min.css";
 import AttachmentViewer from "./AttachmentViewer";
+import transformMarkdownMath from "./markdown/transformMarkdownMath";
+import remarkExtractThink from "./markdown/remarkExtractThink";
 
 interface ChatMessageProps {
   message: Message;
 }
-
-// Finds all math content not in code blocks and transforms it so it can be
-// correctly displayed
-const processMathContent = (content: string) => {
-  const lines = content.split("\n");
-  let insideCodeBlock = false;
-
-  return lines
-    .map((line) => {
-      if (line.trim().startsWith("```")) {
-        insideCodeBlock = !insideCodeBlock;
-      }
-
-      if (insideCodeBlock) {
-        return line;
-      }
-
-      const parts = line.split(/(\\\[.*?\\\]|\\\(.*?\\\))/g);
-
-      return parts
-        .map((part) => {
-          if (part.startsWith("\\[") && part.endsWith("\\]")) {
-            const math = part.substring(2, part.length - 2);
-            return `$${math}$`;
-          } else if (part.startsWith("\\(") && part.endsWith("\\)")) {
-            const math = part.substring(2, part.length - 2);
-            return `$${math}$`;
-          }
-          return part;
-        })
-        .join("");
-    })
-    .join("\n");
-};
 
 export default function ChatMessage({ message }: ChatMessageProps) {
   if (message.role === "system") return null;
@@ -69,10 +38,10 @@ export default function ChatMessage({ message }: ChatMessageProps) {
             <Markdown
               components={{ code: CodeBlock }}
               className="max-w-full"
-              remarkPlugins={[remarkGfm, remarkMath]}
-              rehypePlugins={[rehypeKatex]}
+              remarkPlugins={[remarkGfm, remarkMath, remarkExtractThink]}
+              rehypePlugins={[rehypeKatex, rehypeRaw]}
             >
-              {processMathContent(message.content)}
+              {transformMarkdownMath(message.content)}
             </Markdown>
           </article>
         </div>
