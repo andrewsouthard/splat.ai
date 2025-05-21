@@ -1,6 +1,4 @@
 import { load } from '@tauri-apps/plugin-store';
-// when using `"withGlobalTauri": true`, you may use
-// const { load } = window.__TAURI__.store;
 
 // Create a new store or load the existing one,
 const tauriStore = await load('splat.json', { autoSave: false });
