@@ -3,6 +3,7 @@ import { useProjectStore } from "@/store/projectStore";
 import { useSettingsStore } from "@/store/settingsStore";
 import { Message } from "@/types";
 import { MutableRefObject, useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 import { useShallow } from "zustand/react/shallow";
 
 export function useGetModelsApi() {
@@ -19,6 +20,7 @@ export function useGetModelsApi() {
                 models.map((m: { name: string }) => m.name.replace(":latest", ""))
             );
         } catch (error) {
+            toast(`Failed to fetch models`);
             console.error("Error fetching models:", error);
         }
     };
@@ -63,6 +65,7 @@ export function useStreamingModelPullApi(abortControllerRef: MutableRefObject<Ab
                             setProgress(Number((data.completed / data.total) * 100))
                         }
                     } catch (e) {
+                        toast(`Error parsing response from Ollama.`);
                         console.error("Error parsing JSON:", e);
                     }
                 }
@@ -77,6 +80,7 @@ export function useStreamingModelPullApi(abortControllerRef: MutableRefObject<Ab
                 console.log("Request aborted by user");
             } else {
                 console.error("Error pulling model:", error);
+                toast(`Error while downloading model!`);
             }
             return false;
         }
@@ -210,6 +214,7 @@ export function useStreamingChatApi(keepStreamingRef: any) {
                         }
                     } catch (e) {
                         console.error("Error parsing JSON:", e);
+                        toast(`Error parsing response from Ollama`);
                     }
                 }
             }
@@ -219,6 +224,7 @@ export function useStreamingChatApi(keepStreamingRef: any) {
                 return;
             }
             console.error("Error:", error);
+            toast(`Error during processing`);
             setMessages((prev) => [
                 ...prev,
                 {

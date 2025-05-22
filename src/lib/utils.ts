@@ -2,6 +2,7 @@ import { Message, MessageAttachment } from "@/types"
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 import { convertBase64ToPlaintext } from "./inputHelpers";
+import { toast } from "sonner";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -36,6 +37,7 @@ export function transformMessageAttachments(message: Message) {
       };
     } catch (e) {
       console.error("Error transforming!", e)
+      toast("Error preparing messages!")
       return message;
     }
   } else {

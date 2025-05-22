@@ -10,6 +10,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { clsx } from "clsx";
+import { toast } from "sonner";
 import { useProjectStore } from "@/store/projectStore";
 import { open } from "@tauri-apps/plugin-dialog";
 import { readFile } from "@tauri-apps/plugin-fs";
@@ -68,6 +69,9 @@ export default function InputArea({
       selectProject: state.selectProject,
     }))
   );
+  const selectedProject = selectedProjectId
+    ? projects.find((p) => p.id === selectedProjectId)
+    : null;
 
   const { selectedModel, availableModels, setSelectedModel } =
     useSettingsStore();
@@ -179,11 +183,13 @@ export default function InputArea({
               if (res) {
                 resolve(res.toString());
               } else {
-                reject("Could not read image");
+                toast(`Could not read file`);
+                resolve("");
               }
             };
             reader.readAsDataURL(file);
           } catch (e) {
+            toast(`Could not open file`);
             reject(e);
           }
         });
@@ -201,11 +207,13 @@ export default function InputArea({
               if (data) {
                 resolve(data);
               } else {
+                toast(`Could not read attachment!`);
                 resolve("");
               }
             });
           } catch (e) {
             console.error(e);
+            toast(`Failed to add attachment! ${e}`);
             resolve("");
           }
         });
@@ -221,10 +229,12 @@ export default function InputArea({
     const newAttachments: MessageAttachment[] = [];
     attachmentsToAdd.forEach((a) => {
       const tokens = estimateTokenCount(a.contents);
+      const projectMaxTokens = selectedProject?.contextLength ?? 8_000;
       if (a.fileType.startsWith("text")) {
-        if (tokens < 8000) {
+        if (tokens < projectMaxTokens) {
           newAttachments.push(a);
         } else {
+          toast("File too large, please try another.");
           console.error("File too big");
           console.error(a);
         }
@@ -234,6 +244,7 @@ export default function InputArea({
       ) {
         newAttachments.push(a);
       } else {
+        toast(`Unsupported file type: ${a.fileType}`);
         console.error("Unknown file type");
         console.error(a);
       }
