@@ -20,7 +20,7 @@ const broadcastMiddleware = createBroadcastMiddleware<SettingsState>({
     channelName: 'settings-channel'
 });
 export const useSettingsStore = create<SettingsState>()(
-    persist(
+    persist<SettingsState>(
         broadcastMiddleware(
             (set) => ({
                 apiUrl: "http://localhost:11434",
