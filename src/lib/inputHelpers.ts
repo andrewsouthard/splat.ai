@@ -118,7 +118,6 @@ export function convertBase64ToPlaintext(base64String: string) {
     return text;
   } catch (e) {
     console.error(e)
-    console.error("Error parsing file!")
     throw new Error("Failed to parse file")
   }
 }
